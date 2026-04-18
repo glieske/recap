@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build
+        run: go build ./cmd/recap/
+
+      - name: Test
+        run: go test -race -coverprofile=coverage.out ./cmd/... ./internal/...
+
+      - name: Vet
+        run: go vet ./cmd/... ./internal/...
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v9

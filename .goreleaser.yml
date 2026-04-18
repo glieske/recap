@@ -1,0 +1,78 @@
+version: 2
+
+project_name: recap
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: recap
+    main: ./cmd/recap/
+    binary: recap
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+archives:
+  - id: default
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: "New Features"
+      regexp: "^.*feat.*"
+      order: 0
+    - title: "Bug Fixes"
+      regexp: "^.*fix.*"
+      order: 1
+    - title: Other
+      order: 999
+
+brews:
+  - name: recap
+    repository:
+      owner: glieske
+      name: homebrew-tap
+      # Fine-grained PAT scoped to glieske/homebrew-tap only (Contents: Read and write)
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/glieske/recap"
+    description: "Terminal-based meeting notes app with AI-powered structuring and email generation"
+    license: "Apache-2.0"
+    test: |
+      system "#{bin}/recap", "--version"
+    install: |
+      bin.install "recap"
