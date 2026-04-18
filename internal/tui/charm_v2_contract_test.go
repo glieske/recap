@@ -84,8 +84,8 @@ func TestCharmV2_AppUpdateAcceptsKeyPressMsg(t *testing.T) {
 	if !app.showHelp {
 		t.Fatalf("showHelp mismatch after '?': got false want true")
 	}
-	if app.screen != ScreenMeetingList {
-		t.Fatalf("screen mismatch after '?': got %v want %v", app.screen, ScreenMeetingList)
+	if app.screen != ScreenWelcome {
+		t.Fatalf("screen mismatch after '?': got %v want %v", app.screen, ScreenWelcome)
 	}
 
 	m2 := NewAppModel(&config.Config{}, nil, nil, "")

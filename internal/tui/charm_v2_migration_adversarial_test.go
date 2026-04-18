@@ -29,8 +29,8 @@ func TestAdversarial_KeyPressMsg_Malformed_NoPanics(t *testing.T) {
 		if !ok {
 			t.Fatalf("AppModel.Update type mismatch: got %T", updated)
 		}
-		if typed.screen != ScreenMeetingList {
-			t.Fatalf("AppModel.Update screen mismatch: got %v want %v", typed.screen, ScreenMeetingList)
+		if typed.screen != ScreenWelcome {
+			t.Fatalf("AppModel.Update screen mismatch: got %v want %v", typed.screen, ScreenWelcome)
 		}
 	})
 
@@ -285,8 +285,8 @@ func TestAdversarial_KeyPressMsg_OversizedInjectionPayload_NoPanics(t *testing.T
 		if !ok {
 			t.Fatalf("AppModel.Update type mismatch: got %T", updated)
 		}
-		if typed.screen != ScreenMeetingList {
-			t.Fatalf("AppModel.Update screen mismatch: got %v want %v", typed.screen, ScreenMeetingList)
+		if typed.screen != ScreenWelcome {
+			t.Fatalf("AppModel.Update screen mismatch: got %v want %v", typed.screen, ScreenWelcome)
 		}
 	})
 }

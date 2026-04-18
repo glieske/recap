@@ -14,7 +14,7 @@ func TestHelpKeybindings(t *testing.T) {
 			"Editor",
 			"Toggle split view",
 			"Select AI provider",
-			"Ctrl+G",
+			"Ctrl+A",
 		}
 
 		for _, want := range checks {

@@ -82,10 +82,10 @@ func TestAppSplitWiringTogglePreviewIsNoOpOnEditorScreen(t *testing.T) {
 }
 
 func TestAppSplitWiringScreenEnumLayoutWithoutPreview(t *testing.T) {
-	if ScreenMeetingList != 0 {
-		t.Fatalf("expected ScreenMeetingList to equal 0, got %d", ScreenMeetingList)
+	if ScreenMeetingList != 1 {
+		t.Fatalf("expected ScreenMeetingList to equal 1, got %d", ScreenMeetingList)
 	}
-	if ScreenProviderSelector != 5 {
-		t.Fatalf("expected ScreenProviderSelector to equal 5 (no ScreenPreview in enum), got %d", ScreenProviderSelector)
+	if ScreenProviderSelector != 6 {
+		t.Fatalf("expected ScreenProviderSelector to equal 6 (no ScreenPreview in enum), got %d", ScreenProviderSelector)
 	}
 }

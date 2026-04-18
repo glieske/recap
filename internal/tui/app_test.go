@@ -195,6 +195,7 @@ func TestAppRegenerateEmailMsgStartsAIWhenConfigured(t *testing.T) {
 func TestAppEscFromNewMeetingReturnsToMeetingList(t *testing.T) {
 	store := newTestStore(t)
 	m := NewAppModel(nil, store, nil, "")
+	m.screen = ScreenMeetingList
 
 	// Open new-meeting as overlay
 	opened, _ := appUpdate(t, m, NavigateMsg{Screen: ScreenNewMeeting})
