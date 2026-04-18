@@ -61,18 +61,21 @@ changelog:
     - title: Other
       order: 999
 
-brews:
+homebrew_casks:
   - name: recap
     repository:
       owner: glieske
-      name: homebrew-tap
-      # Fine-grained PAT scoped to glieske/homebrew-tap only (Contents: Read and write)
+      name: homebrew-casks
+      # Fine-grained PAT scoped to glieske/homebrew-casks (Contents: Read and write)
       token: "{{ .Env.TAP_GITHUB_TOKEN }}"
-    directory: Formula
+    directory: Casks
+    binaries:
+      - recap
     homepage: "https://github.com/glieske/recap"
     description: "Terminal-based meeting notes app with AI-powered structuring and email generation"
-    license: "Apache-2.0"
-    test: |
-      system "#{bin}/recap", "--version"
-    install: |
-      bin.install "recap"
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/recap"]
+          end
