@@ -123,11 +123,7 @@ func (s *Store) ListProjects() ([]Project, error) {
 			return nil, fmt.Errorf("unmarshal project metadata for %q: %w", entry.Name(), unmarshalErr)
 		}
 
-		projects = append(projects, Project{
-			Name:         meta.Name,
-			Prefix:       meta.Prefix,
-			NextSequence: meta.NextSequence,
-		})
+		projects = append(projects, Project(meta))
 	}
 
 	sort.Slice(projects, func(leftIndex, rightIndex int) bool {

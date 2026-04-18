@@ -234,10 +234,7 @@ func TestAppEscFromHelpReturnsToPreviousScreen(t *testing.T) {
 		t.Fatalf("expected non-nil command for help dismiss")
 	}
 
-	dismissMsg, ok := cmd().(tea.Msg)
-	if !ok {
-		t.Fatalf("expected tea.Msg from dismiss command")
-	}
+	dismissMsg := cmd()
 
 	final, _ := appUpdate(t, updated, dismissMsg)
 	if final.showHelp {

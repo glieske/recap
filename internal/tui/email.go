@@ -42,7 +42,6 @@ type EmailModel struct {
 	height       int
 	clipboardErr error
 	statusMsg    string
-	statusExpiry time.Time
 }
 
 func NewEmailModel(subject, body string, width, height int, language string) EmailModel {

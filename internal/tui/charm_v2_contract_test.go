@@ -19,10 +19,6 @@ func keyRune(r rune) tea.KeyPressMsg {
 	return tea.KeyPressMsg(tea.Key{Text: string(r), Code: r})
 }
 
-func keyCtrl(r rune) tea.KeyPressMsg {
-	return tea.KeyPressMsg(tea.Key{Text: string(r), Code: r, Mod: tea.ModCtrl})
-}
-
 func appFromModel(t *testing.T, model tea.Model) AppModel {
 	t.Helper()
 	app, ok := model.(AppModel)

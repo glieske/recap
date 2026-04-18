@@ -167,8 +167,8 @@ func TestConfirmViewRendersQuestionAndButtons(t *testing.T) {
 }
 
 func TestConfirmViewFocusedButtonIsBold(t *testing.T) {
-	boldYesPattern := regexp.MustCompile("\\x1b\\[[0-9;]*m\\[ Yes \\]\\x1b\\[[0-9;]*m")
-	boldNoPattern := regexp.MustCompile("\\x1b\\[[0-9;]*m\\[ No \\]\\x1b\\[[0-9;]*m")
+	boldYesPattern := regexp.MustCompile(`\x1b\[[0-9;]*m\[ Yes \]\x1b\[[0-9;]*m`)
+	boldNoPattern := regexp.MustCompile(`\x1b\[[0-9;]*m\[ No \]\x1b\[[0-9;]*m`)
 
 	yesFocused := NewConfirmModel("Proceed?", "act")
 	if !boldYesPattern.MatchString(yesFocused.View().Content) {
