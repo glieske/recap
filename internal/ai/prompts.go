@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/glieske/recap/internal/languages"
 	openai "github.com/sashabaranov/go-openai"
 )
 
@@ -68,7 +69,7 @@ Output requirements:
 - The content must be ready to paste into an email body as-is.
 - Do not include commentary about the format.
 
-Language: Write the entire email body in %s.`, emailLanguageName(language)))
+Language: Write the entire email body in %s.`, languages.DisplayName(strings.ToLower(strings.TrimSpace(language)))))
 
 	return []openai.ChatCompletionMessage{
 		{
@@ -79,19 +80,6 @@ Language: Write the entire email body in %s.`, emailLanguageName(language)))
 			Role:    openai.ChatMessageRoleUser,
 			Content: structuredMD,
 		},
-	}
-}
-
-func emailLanguageName(language string) string {
-	switch strings.ToLower(strings.TrimSpace(language)) {
-	case "en":
-		return "English"
-	case "pl":
-		return "Polish"
-	case "no":
-		return "Norwegian"
-	default:
-		return "English"
 	}
 }
 

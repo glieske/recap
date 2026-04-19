@@ -22,11 +22,11 @@ func TestSettingsRendersProviderSelect(t *testing.T) {
 
 	w := a.NewWindow("settings-provider-default")
 	cfg := &config.Config{
-		AIProvider:    "",
-		GitHubModel:   "gpt-4o",
-		LMStudioURL:   "http://localhost:1234/v1",
-		EmailLanguage: "en",
-		NotesDir:      t.TempDir(),
+		AIProvider:     "",
+		GitHubModel:    "gpt-4o",
+		LMStudioURL:    "http://localhost:1234/v1",
+		EmailLanguages: []string{"en"},
+		NotesDir:       t.TempDir(),
 	}
 
 	screen := NewSettingsScreen(cfg, "", w)
@@ -53,7 +53,7 @@ func TestSettingsProviderSwapToOpenRouter(t *testing.T) {
 		OpenRouterModel:  "google/gemini-flash-1.5",
 		OpenRouterAPIKey: "api-key",
 		LMStudioURL:      "http://localhost:1234/v1",
-		EmailLanguage:    "en",
+		EmailLanguages:   []string{"en"},
 		NotesDir:         t.TempDir(),
 	}
 
@@ -84,12 +84,12 @@ func TestSettingsProviderSwapToLMStudio(t *testing.T) {
 
 	w := a.NewWindow("settings-provider-lmstudio")
 	cfg := &config.Config{
-		AIProvider:    "github_models",
-		GitHubModel:   "gpt-4o",
-		LMStudioURL:   "http://localhost:1234/v1",
-		LMStudioModel: "llama3",
-		EmailLanguage: "en",
-		NotesDir:      t.TempDir(),
+		AIProvider:     "github_models",
+		GitHubModel:    "gpt-4o",
+		LMStudioURL:    "http://localhost:1234/v1",
+		LMStudioModel:  "llama3",
+		EmailLanguages: []string{"en"},
+		NotesDir:       t.TempDir(),
 	}
 
 	screen := NewSettingsScreen(cfg, "", w)
@@ -119,23 +119,24 @@ func TestSettingsEmailLanguageMapping(t *testing.T) {
 
 	w := a.NewWindow("settings-language")
 	cfg := &config.Config{
-		AIProvider:    "github_models",
-		GitHubModel:   "gpt-4o",
-		LMStudioURL:   "http://localhost:1234/v1",
-		EmailLanguage: "pl",
-		NotesDir:      t.TempDir(),
+		AIProvider:     "github_models",
+		GitHubModel:    "gpt-4o",
+		LMStudioURL:    "http://localhost:1234/v1",
+		EmailLanguages: []string{"pl"},
+		NotesDir:       t.TempDir(),
 	}
 
 	screen := NewSettingsScreen(cfg, "", w)
 	w.SetContent(screen)
 
-	languageSelect := findSettingsSelectByOptions(screen, []string{"English", "Polish", "Norwegian"})
-	if languageSelect == nil {
-		t.Fatal("expected language select with English/Polish/Norwegian options")
+	languageCheckGroup := findSettingsCheckGroup(screen)
+	if languageCheckGroup == nil {
+		t.Fatal("expected language check group")
 	}
 
-	if got, want := languageSelect.Selected, "Polish"; got != want {
-		t.Fatalf("expected language display %q for cfg.EmailLanguage=pl, got %q", want, got)
+	selected := languageCheckGroup.Selected
+	if len(selected) != 1 || selected[0] != "Polish" {
+		t.Fatalf("expected Selected=[Polish] for cfg.EmailLanguages=[pl], got %v", selected)
 	}
 }
 
@@ -155,7 +156,7 @@ func TestSettingsSaveUpdatesConfig(t *testing.T) {
 		OpenRouterAPIKey: "",
 		LMStudioURL:      "http://localhost:1234/v1",
 		LMStudioModel:    "",
-		EmailLanguage:    "en",
+		EmailLanguages:   []string{"en"},
 		NotesDir:         originalNotesDir,
 	}
 
@@ -166,9 +167,9 @@ func TestSettingsSaveUpdatesConfig(t *testing.T) {
 	if providerSelect == nil {
 		t.Fatal("expected provider select")
 	}
-	languageSelect := findSettingsSelectByOptions(screen, []string{"English", "Polish", "Norwegian"})
-	if languageSelect == nil {
-		t.Fatal("expected language select")
+	languageCheckGroup := findSettingsCheckGroup(screen)
+	if languageCheckGroup == nil {
+		t.Fatal("expected language check group")
 	}
 
 	notesDirEntry := findSettingsEntryByFormLabel(screen, "Directory")
@@ -205,7 +206,7 @@ func TestSettingsSaveUpdatesConfig(t *testing.T) {
 	notesDirEntry.SetText(updatedNotesDir)
 	openRouterModelEntry.SetText("openrouter/new-model")
 	openRouterAPIKeyEntry.SetText("test-api-key")
-	languageSelect.SetSelected("Norwegian")
+	languageCheckGroup.SetSelected([]string{"Norwegian"})
 	fyneTest.Tap(saveButton)
 
 	if got, want := cfg.AIProvider, "openrouter"; got != want {
@@ -220,8 +221,8 @@ func TestSettingsSaveUpdatesConfig(t *testing.T) {
 	if got, want := cfg.OpenRouterAPIKey, "test-api-key"; got != want {
 		t.Fatalf("expected cfg.OpenRouterAPIKey %q, got %q", want, got)
 	}
-	if got, want := cfg.EmailLanguage, "no"; got != want {
-		t.Fatalf("expected cfg.EmailLanguage %q from Norwegian selection, got %q", want, got)
+	if len(cfg.EmailLanguages) != 1 || cfg.EmailLanguages[0] != "no" {
+		t.Fatalf("expected cfg.EmailLanguages [no] from Norwegian selection, got %v", cfg.EmailLanguages)
 	}
 
 	loadedCfg, err := config.Load(configPath)
@@ -231,8 +232,8 @@ func TestSettingsSaveUpdatesConfig(t *testing.T) {
 	if got, want := loadedCfg.AIProvider, "openrouter"; got != want {
 		t.Fatalf("expected saved ai_provider %q, got %q", want, got)
 	}
-	if got, want := loadedCfg.EmailLanguage, "no"; got != want {
-		t.Fatalf("expected saved email_language %q, got %q", want, got)
+	if len(loadedCfg.EmailLanguages) != 1 || loadedCfg.EmailLanguages[0] != "no" {
+		t.Fatalf("expected saved email_languages [no], got %v", loadedCfg.EmailLanguages)
 	}
 	if got, want := loadedCfg.NotesDir, updatedNotesDir; got != want {
 		t.Fatalf("expected saved notes_dir %q, got %q", want, got)
@@ -251,6 +252,21 @@ func findSettingsSelectByOptions(root fyne.CanvasObject, options []string) *widg
 		}
 		if reflect.DeepEqual(sel.Options, options) {
 			found = sel
+		}
+	})
+
+	return found
+}
+
+func findSettingsCheckGroup(root fyne.CanvasObject) *widget.CheckGroup {
+	var found *widget.CheckGroup
+	walkSettingsObjects(root, func(obj fyne.CanvasObject) {
+		if found != nil {
+			return
+		}
+		cg, ok := obj.(*widget.CheckGroup)
+		if ok {
+			found = cg
 		}
 	})
 

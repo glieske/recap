@@ -18,8 +18,17 @@ type LanguageSelectModel struct {
 	cursor  int
 }
 
-func NewLanguageSelectModel(current string) LanguageSelectModel {
-	options := []string{"en", "pl", "no"}
+func NewLanguageSelectModel(current string, configuredCodes []string) LanguageSelectModel {
+	options := configuredCodes
+	if len(options) == 0 {
+		options = []string{"en"}
+	}
+
+	labels := make([]string, len(options))
+	for i, option := range options {
+		labels[i] = strings.ToUpper(option)
+	}
+
 	cursor := 0
 	for i, option := range options {
 		if option == current {
@@ -30,7 +39,7 @@ func NewLanguageSelectModel(current string) LanguageSelectModel {
 
 	return LanguageSelectModel{
 		options: options,
-		labels:  []string{"EN", "PL", "NO"},
+		labels:  labels,
 		current: current,
 		cursor:  cursor,
 	}

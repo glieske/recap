@@ -447,7 +447,7 @@ func TestCharmV2_AdditionalPublicAPIContracts(t *testing.T) {
 
 	cycle := "en"
 	for i := 0; i < 3; i++ {
-		cycle = nextEmailLanguage(cycle)
+		cycle = nextEmailLanguage(cycle, []string{"en", "pl", "no"})
 	}
 	if got, want := cycle, "en"; got != want {
 		t.Fatalf("nextEmailLanguage 3-step cycle mismatch: got %q want %q", got, want)

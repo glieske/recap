@@ -13,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/glieske/recap/internal/config"
+	"github.com/glieske/recap/internal/languages"
 )
 
 func NewSettingsScreen(cfg *config.Config, configPath string, win fyne.Window) fyne.CanvasObject {
@@ -67,23 +68,20 @@ func NewSettingsScreen(cfg *config.Config, configPath string, win fyne.Window) f
 	}
 	updateProviderSpecificFields(providerSelect.Selected)
 
-	displayToValue := map[string]string{
-		"English":   "en",
-		"Polish":    "pl",
-		"Norwegian": "no",
-	}
-	valueToDisplay := map[string]string{
-		"en": "English",
-		"pl": "Polish",
-		"no": "Norwegian",
+	displayToCode := make(map[string]string, len(languages.AllLanguages))
+	allDisplayNames := make([]string, 0, len(languages.AllLanguages))
+	for _, language := range languages.AllLanguages {
+		displayToCode[language.Name] = language.Code
+		allDisplayNames = append(allDisplayNames, language.Name)
 	}
 
-	languageSelect := widget.NewSelect([]string{"English", "Polish", "Norwegian"}, nil)
-	selectedLanguage, hasLanguage := valueToDisplay[cfg.EmailLanguage]
-	if !hasLanguage {
-		selectedLanguage = "English"
+	selectedNames := make([]string, 0, len(cfg.EmailLanguages))
+	for _, code := range cfg.EmailLanguages {
+		selectedNames = append(selectedNames, languages.DisplayName(code))
 	}
-	languageSelect.SetSelected(selectedLanguage)
+
+	languageCheckGroup := widget.NewCheckGroup(allDisplayNames, nil)
+	languageCheckGroup.SetSelected(selectedNames)
 
 	notesDirEntry := widget.NewEntry()
 	notesDirEntry.SetText(cfg.NotesDir)
@@ -106,9 +104,21 @@ func NewSettingsScreen(cfg *config.Config, configPath string, win fyne.Window) f
 			return
 		}
 
-		emailLanguage := displayToValue[languageSelect.Selected]
-		if emailLanguage == "" {
-			emailLanguage = "en"
+		selectedDisplayNames := languageCheckGroup.Selected
+		if len(selectedDisplayNames) < languages.MinSelected {
+			dialog.ShowError(fmt.Errorf("select at least %d language", languages.MinSelected), win)
+			return
+		}
+		if len(selectedDisplayNames) > languages.MaxSelected {
+			dialog.ShowError(fmt.Errorf("select at most %d languages", languages.MaxSelected), win)
+			return
+		}
+
+		selectedCodes := make([]string, 0, len(selectedDisplayNames))
+		for _, name := range selectedDisplayNames {
+			if code, ok := displayToCode[name]; ok {
+				selectedCodes = append(selectedCodes, code)
+			}
 		}
 
 		newCfg := &config.Config{
@@ -119,7 +129,7 @@ func NewSettingsScreen(cfg *config.Config, configPath string, win fyne.Window) f
 			OpenRouterAPIKey: strings.TrimSpace(openRouterAPIKeyEntry.Text),
 			LMStudioURL:      lmStudioURL,
 			LMStudioModel:    strings.TrimSpace(lmStudioModelEntry.Text),
-			EmailLanguage:    emailLanguage,
+			EmailLanguages:   selectedCodes,
 		}
 
 		if err := config.Save(newCfg, configPath); err != nil {
@@ -136,14 +146,14 @@ func NewSettingsScreen(cfg *config.Config, configPath string, win fyne.Window) f
 	providerHeader := widget.NewLabel("AI Provider")
 	providerHeader.TextStyle = fyne.TextStyle{Bold: true}
 
-	emailHeader := widget.NewLabel("Email Language")
+	emailHeader := widget.NewLabel("Email Languages")
 	emailHeader.TextStyle = fyne.TextStyle{Bold: true}
 
 	notesDirectoryHeader := widget.NewLabel("Notes Directory")
 	notesDirectoryHeader.TextStyle = fyne.TextStyle{Bold: true}
 
 	providerForm := widget.NewForm(widget.NewFormItem("Provider", providerSelect))
-	languageForm := widget.NewForm(widget.NewFormItem("Language", languageSelect))
+	languageForm := widget.NewForm(widget.NewFormItem("Languages", languageCheckGroup))
 	notesDirectoryForm := widget.NewForm(widget.NewFormItem("Directory", notesDirEntry))
 
 	return container.NewVScroll(

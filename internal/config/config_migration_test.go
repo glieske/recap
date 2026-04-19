@@ -195,7 +195,6 @@ func TestDefaultConfigSaveAndLoadRoundTrip(t *testing.T) {
 		OpenRouterAPIKey: "token-value",
 		LMStudioURL:      "",
 		LMStudioModel:    "",
-		EmailLanguage:    "en",
 	}
 
 	if err := Save(input, configPath); err != nil {
@@ -225,9 +224,6 @@ func TestDefaultConfigSaveAndLoadRoundTrip(t *testing.T) {
 	}
 	if loaded.LMStudioURL != "http://localhost:1234/v1" {
 		t.Fatalf("loaded.LMStudioURL = %q, want %q", loaded.LMStudioURL, "http://localhost:1234/v1")
-	}
-	if loaded.EmailLanguage != "en" {
-		t.Fatalf("loaded.EmailLanguage = %q, want %q", loaded.EmailLanguage, "en")
 	}
 }
 

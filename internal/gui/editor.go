@@ -21,6 +21,7 @@ import (
 
 	"github.com/glieske/recap/internal/ai"
 	"github.com/glieske/recap/internal/config"
+	"github.com/glieske/recap/internal/languages"
 	"github.com/glieske/recap/internal/storage"
 )
 
@@ -176,8 +177,8 @@ func NewEditorScreen(meeting storage.Meeting, store *storage.Store, provider ai.
 		}
 
 		language := "en"
-		if cfg != nil && cfg.EmailLanguage != "" {
-			language = cfg.EmailLanguage
+		if cfg != nil && len(cfg.EmailLanguages) > 0 {
+			language = cfg.EmailLanguages[0]
 		}
 
 		progress := widget.NewProgressBarInfinite()
@@ -202,9 +203,22 @@ func NewEditorScreen(meeting storage.Meeting, store *storage.Store, provider ai.
 				emailEntry.SetText(result)
 				emailEntry.Wrapping = fyne.TextWrapWord
 
-				langNames := []string{"English", "Polish", "Norwegian"}
-				langCodes := map[string]string{"English": "en", "Polish": "pl", "Norwegian": "no"}
-				codeToName := map[string]string{"en": "English", "pl": "Polish", "no": "Norwegian"}
+				var configuredLangs []string
+				if cfg != nil {
+					configuredLangs = cfg.EmailLanguages
+				}
+				if len(configuredLangs) == 0 {
+					configuredLangs = []string{"en"}
+				}
+				langNames := make([]string, 0, len(configuredLangs))
+				langCodes := make(map[string]string, len(configuredLangs))
+				codeToName := make(map[string]string, len(configuredLangs))
+				for _, code := range configuredLangs {
+					name := languages.DisplayName(code)
+					langNames = append(langNames, name)
+					langCodes[name] = code
+					codeToName[code] = name
+				}
 
 				currentResult := result
 				langSelect := widget.NewSelect(langNames, nil)

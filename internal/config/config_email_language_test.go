@@ -8,22 +8,27 @@ import (
 )
 
 func TestConfigEmailLanguageDefaultsAndNormalization(t *testing.T) {
-	t.Run("default config uses en", func(t *testing.T) {
+	t.Run("default config uses default enabled codes", func(t *testing.T) {
 		cfg, err := defaultConfig()
 		if err != nil {
 			t.Fatalf("defaultConfig() error = %v", err)
 		}
 
-		if cfg.EmailLanguage != "en" {
-			t.Fatalf("EmailLanguage = %q, want %q", cfg.EmailLanguage, "en")
+		want := []string{"en", "pl", "de", "no"}
+		if len(cfg.EmailLanguages) != len(want) {
+			t.Fatalf("EmailLanguages = %v, want %v", cfg.EmailLanguages, want)
+		}
+		for i, code := range want {
+			if cfg.EmailLanguages[i] != code {
+				t.Fatalf("EmailLanguages[%d] = %q, want %q", i, cfg.EmailLanguages[i], code)
+			}
 		}
 	})
 
-	t.Run("empty email_language normalizes to en", func(t *testing.T) {
+	t.Run("empty config defaults to default enabled codes", func(t *testing.T) {
 		configPath := filepath.Join(t.TempDir(), "config.yaml")
 		content := []byte(strings.Join([]string{
 			"notes_dir: /tmp/notes",
-			"email_language: \"\"",
 			"",
 		}, "\n"))
 
@@ -36,16 +41,20 @@ func TestConfigEmailLanguageDefaultsAndNormalization(t *testing.T) {
 			t.Fatalf("Load(%q) error = %v", configPath, err)
 		}
 
-		if cfg.EmailLanguage != "en" {
-			t.Fatalf("EmailLanguage = %q, want %q", cfg.EmailLanguage, "en")
+		want := []string{"en", "pl", "de", "no"}
+		if len(cfg.EmailLanguages) != len(want) {
+			t.Fatalf("EmailLanguages = %v, want %v", cfg.EmailLanguages, want)
 		}
 	})
 
-	t.Run("invalid email_language normalizes to en", func(t *testing.T) {
+	t.Run("invalid codes are filtered out", func(t *testing.T) {
 		configPath := filepath.Join(t.TempDir(), "config.yaml")
 		content := []byte(strings.Join([]string{
 			"notes_dir: /tmp/notes",
-			"email_language: fr",
+			"email_languages:",
+			"  - en",
+			"  - xx",
+			"  - pl",
 			"",
 		}, "\n"))
 
@@ -58,43 +67,95 @@ func TestConfigEmailLanguageDefaultsAndNormalization(t *testing.T) {
 			t.Fatalf("Load(%q) error = %v", configPath, err)
 		}
 
-		if cfg.EmailLanguage != "en" {
-			t.Fatalf("EmailLanguage = %q, want %q", cfg.EmailLanguage, "en")
+		want := []string{"en", "pl"}
+		if len(cfg.EmailLanguages) != len(want) {
+			t.Fatalf("EmailLanguages = %v, want %v", cfg.EmailLanguages, want)
 		}
 	})
 
-	t.Run("valid values en pl no are preserved", func(t *testing.T) {
-		tests := []struct {
-			name     string
-			language string
-		}{
-			{name: "en preserved", language: "en"},
-			{name: "pl preserved", language: "pl"},
-			{name: "no preserved", language: "no"},
+	t.Run("all invalid codes fallback to defaults", func(t *testing.T) {
+		configPath := filepath.Join(t.TempDir(), "config.yaml")
+		content := []byte(strings.Join([]string{
+			"notes_dir: /tmp/notes",
+			"email_languages:",
+			"  - xx",
+			"  - yy",
+			"",
+		}, "\n"))
+
+		if err := os.WriteFile(configPath, content, 0o600); err != nil {
+			t.Fatalf("WriteFile(config) error = %v", err)
 		}
 
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				configPath := filepath.Join(t.TempDir(), "config.yaml")
-				content := []byte(strings.Join([]string{
-					"notes_dir: /tmp/notes",
-					"email_language: " + tt.language,
-					"",
-				}, "\n"))
+		cfg, err := Load(configPath)
+		if err != nil {
+			t.Fatalf("Load(%q) error = %v", configPath, err)
+		}
 
-				if err := os.WriteFile(configPath, content, 0o600); err != nil {
-					t.Fatalf("WriteFile(config) error = %v", err)
-				}
-
-				cfg, err := Load(configPath)
-				if err != nil {
-					t.Fatalf("Load(%q) error = %v", configPath, err)
-				}
-
-				if cfg.EmailLanguage != tt.language {
-					t.Fatalf("EmailLanguage = %q, want %q", cfg.EmailLanguage, tt.language)
-				}
-			})
+		want := []string{"en", "pl", "de", "no"}
+		if len(cfg.EmailLanguages) != len(want) {
+			t.Fatalf("EmailLanguages = %v, want %v", cfg.EmailLanguages, want)
 		}
 	})
+
+	t.Run("max 5 languages enforced by truncation", func(t *testing.T) {
+		configPath := filepath.Join(t.TempDir(), "config.yaml")
+		content := []byte(strings.Join([]string{
+			"notes_dir: /tmp/notes",
+			"email_languages:",
+			"  - en",
+			"  - pl",
+			"  - de",
+			"  - no",
+			"  - zh",
+			"  - hi",
+			"  - es",
+			"",
+		}, "\n"))
+
+		if err := os.WriteFile(configPath, content, 0o600); err != nil {
+			t.Fatalf("WriteFile(config) error = %v", err)
+		}
+
+		cfg, err := Load(configPath)
+		if err != nil {
+			t.Fatalf("Load(%q) error = %v", configPath, err)
+		}
+
+		if len(cfg.EmailLanguages) != 5 {
+			t.Fatalf("EmailLanguages length = %d, want 5", len(cfg.EmailLanguages))
+		}
+	})
+
+	t.Run("valid languages are preserved in order", func(t *testing.T) {
+		configPath := filepath.Join(t.TempDir(), "config.yaml")
+		content := []byte(strings.Join([]string{
+			"notes_dir: /tmp/notes",
+			"email_languages:",
+			"  - ja",
+			"  - fr",
+			"  - de",
+			"",
+		}, "\n"))
+
+		if err := os.WriteFile(configPath, content, 0o600); err != nil {
+			t.Fatalf("WriteFile(config) error = %v", err)
+		}
+
+		cfg, err := Load(configPath)
+		if err != nil {
+			t.Fatalf("Load(%q) error = %v", configPath, err)
+		}
+
+		want := []string{"ja", "fr", "de"}
+		if len(cfg.EmailLanguages) != len(want) {
+			t.Fatalf("EmailLanguages = %v, want %v", cfg.EmailLanguages, want)
+		}
+		for i, code := range want {
+			if cfg.EmailLanguages[i] != code {
+				t.Fatalf("EmailLanguages[%d] = %q, want %q", i, cfg.EmailLanguages[i], code)
+			}
+		}
+	})
+
 }

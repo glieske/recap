@@ -18,6 +18,7 @@ import (
 
 	"github.com/glieske/recap/internal/ai"
 	"github.com/glieske/recap/internal/config"
+	"github.com/glieske/recap/internal/languages"
 	"github.com/glieske/recap/internal/storage"
 )
 
@@ -447,7 +448,7 @@ func TestEditorEmailGenerateCallsProviderAndSupportsClipboard(t *testing.T) {
 
 	provider := &recordingEmailProvider{emailValue: "Subject: Test\n\nBody"}
 	win := app.NewWindow("email-generate")
-	screen := NewEditorScreen(*meeting, store, provider, win, nil, func() {}, nil)
+	screen := NewEditorScreen(*meeting, store, provider, win, &config.Config{EmailLanguages: []string{"en", "pl", "no"}}, func() {}, nil)
 	win.SetContent(screen.Content)
 
 	emailButton := findButtonByText(screen.Content, "Generate Email")
@@ -522,7 +523,7 @@ func TestEditorEmailUsesConfigEmailLanguage(t *testing.T) {
 
 	provider := &recordingEmailProvider{emailValue: "Email body"}
 	win := app.NewWindow("email-language")
-	cfg := &config.Config{EmailLanguage: "en"}
+	cfg := &config.Config{EmailLanguages: []string{"en"}}
 	screen := NewEditorScreen(*meeting, store, provider, win, cfg, func() {}, nil)
 	win.SetContent(screen.Content)
 
@@ -682,7 +683,7 @@ func TestEditorEmailAdversarialProviderErrorReEnablesButtonAndShowsErrorDialog(t
 
 	provider := &recordingEmailProvider{emailErr: context.DeadlineExceeded}
 	win := app.NewWindow("email-provider-error")
-	screen := NewEditorScreen(*meeting, store, provider, win, nil, func() {}, nil)
+	screen := NewEditorScreen(*meeting, store, provider, win, &config.Config{EmailLanguages: []string{"en", "pl", "no"}}, func() {}, nil)
 	win.SetContent(screen.Content)
 
 	emailButton := findButtonByText(screen.Content, "Generate Email")
@@ -797,7 +798,7 @@ func TestEditorEmailAdversarialEmptyConfigLanguageDefaultsLanguageToEnglish(t *t
 
 	provider := &recordingEmailProvider{emailValue: "Body"}
 	win := app.NewWindow("email-empty-language")
-	cfg := &config.Config{EmailLanguage: ""}
+	cfg := &config.Config{EmailLanguages: []string{}}
 	screen := NewEditorScreen(*meeting, store, provider, win, cfg, func() {}, nil)
 	win.SetContent(screen.Content)
 
@@ -1066,7 +1067,7 @@ func TestEditor43EmailDialogIncludesLanguageSelectWithExpectedOptions(t *testing
 
 	provider := &recordingEmailProvider{emailValue: "Subject: Demo\n\nBody"}
 	win := app.NewWindow("editor43-email-options")
-	screen := NewEditorScreen(*meeting, store, provider, win, nil, func() {}, nil)
+	screen := NewEditorScreen(*meeting, store, provider, win, &config.Config{EmailLanguages: []string{"en", "pl", "no"}}, func() {}, nil)
 	win.SetContent(screen.Content)
 
 	emailButton := findButtonByText(screen.Content, "Generate Email")
@@ -1122,7 +1123,7 @@ func TestEditor43EmailDialogInitialLanguageSelectionMatchesConfig(t *testing.T) 
 	}
 
 	provider := &recordingEmailProvider{emailValue: "Subject: Demo\n\nBody"}
-	cfg := &config.Config{EmailLanguage: "en"}
+	cfg := &config.Config{EmailLanguages: []string{"en"}}
 	win := app.NewWindow("editor43-email-selected")
 	screen := NewEditorScreen(*meeting, store, provider, win, cfg, func() {}, nil)
 	win.SetContent(screen.Content)
@@ -1718,5 +1719,297 @@ func TestCtrlS_NilWindowDoesNotRegisterShortcut(t *testing.T) {
 
 	if len(statuses) != 0 {
 		t.Fatalf("expected no status callbacks when window=nil and no shortcut can fire, got %v", statuses)
+	}
+}
+
+func TestEditorDynamicLanguage_DefaultUsesFirstConfiguredLanguage(t *testing.T) {
+	app := fyneTest.NewApp()
+	defer app.Quit()
+
+	store := storage.NewStore(t.TempDir())
+	if _, err := store.CreateProject("Test Project", "DLANG1"); err != nil {
+		t.Fatalf("CreateProject returned error: %v", err)
+	}
+
+	meeting, err := store.CreateMeeting(
+		"Dynamic Language Default",
+		time.Date(2026, 4, 19, 0, 0, 0, 0, time.UTC),
+		nil,
+		"DLANG1",
+		nil,
+		"",
+	)
+	if err != nil {
+		t.Fatalf("CreateMeeting returned error: %v", err)
+	}
+
+	if err := store.SaveStructuredNotes(meeting.Project, meeting.ID, "# Structured"); err != nil {
+		t.Fatalf("SaveStructuredNotes returned error: %v", err)
+	}
+
+	provider := &recordingEmailProvider{emailValue: "Email body"}
+	cfg := &config.Config{EmailLanguages: []string{"pl", "de"}}
+	win := app.NewWindow("dynamic-language-default")
+	screen := NewEditorScreen(*meeting, store, provider, win, cfg, func() {}, nil)
+	win.SetContent(screen.Content)
+
+	emailButton := findButtonByText(screen.Content, "Generate Email")
+	if emailButton == nil {
+		t.Fatal("expected Generate Email button")
+	}
+
+	fyneTest.Tap(emailButton)
+
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		calls, _, language := provider.snapshot()
+		if calls == 1 {
+			if got, want := language, "pl"; got != want {
+				t.Fatalf("expected first configured language %q, got %q", want, got)
+			}
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("expected GenerateEmailSummary to be called once, got %d", calls)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func TestEditorDynamicLanguage_SingleConfiguredLanguageDropdownOnlyEnglish(t *testing.T) {
+	app := fyneTest.NewApp()
+	defer app.Quit()
+
+	store := storage.NewStore(t.TempDir())
+	if _, err := store.CreateProject("Test Project", "DLANG2"); err != nil {
+		t.Fatalf("CreateProject returned error: %v", err)
+	}
+
+	meeting, err := store.CreateMeeting(
+		"Single Configured Language",
+		time.Date(2026, 4, 19, 0, 0, 0, 0, time.UTC),
+		nil,
+		"DLANG2",
+		nil,
+		"",
+	)
+	if err != nil {
+		t.Fatalf("CreateMeeting returned error: %v", err)
+	}
+
+	if err := store.SaveStructuredNotes(meeting.Project, meeting.ID, "# Structured"); err != nil {
+		t.Fatalf("SaveStructuredNotes returned error: %v", err)
+	}
+
+	provider := &recordingEmailProvider{emailValue: "Email body"}
+	cfg := &config.Config{EmailLanguages: []string{"en"}}
+	win := app.NewWindow("dynamic-language-single")
+	screen := NewEditorScreen(*meeting, store, provider, win, cfg, func() {}, nil)
+	win.SetContent(screen.Content)
+
+	emailButton := findButtonByText(screen.Content, "Generate Email")
+	if emailButton == nil {
+		t.Fatal("expected Generate Email button")
+	}
+
+	fyneTest.Tap(emailButton)
+
+	copyButton := waitForButtonInOverlay(win, "Copy to Clipboard", 2*time.Second)
+	if copyButton == nil {
+		t.Fatal("expected email dialog to be shown")
+	}
+
+	overlay := win.Canvas().Overlays().Top()
+	if overlay == nil {
+		t.Fatal("expected overlay for email dialog")
+	}
+
+	langSelect := findSelectInOverlay(overlay)
+	if langSelect == nil {
+		t.Fatal("expected language select in email dialog")
+	}
+
+	if got, want := langSelect.Options, []string{"English"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("expected language options %v, got %v", want, got)
+	}
+
+	if got, want := langSelect.Selected, "English"; got != want {
+		t.Fatalf("expected selected language %q, got %q", want, got)
+	}
+}
+
+func TestEditorDynamicLanguage_NilConfigFallsBackToEnglishCode(t *testing.T) {
+	app := fyneTest.NewApp()
+	defer app.Quit()
+
+	store := storage.NewStore(t.TempDir())
+	if _, err := store.CreateProject("Test Project", "DLANG3"); err != nil {
+		t.Fatalf("CreateProject returned error: %v", err)
+	}
+
+	meeting, err := store.CreateMeeting(
+		"Nil Config Fallback",
+		time.Date(2026, 4, 19, 0, 0, 0, 0, time.UTC),
+		nil,
+		"DLANG3",
+		nil,
+		"",
+	)
+	if err != nil {
+		t.Fatalf("CreateMeeting returned error: %v", err)
+	}
+
+	if err := store.SaveStructuredNotes(meeting.Project, meeting.ID, "# Structured"); err != nil {
+		t.Fatalf("SaveStructuredNotes returned error: %v", err)
+	}
+
+	provider := &recordingEmailProvider{emailValue: "Email body"}
+	win := app.NewWindow("dynamic-language-nil-config")
+	screen := NewEditorScreen(*meeting, store, provider, win, nil, func() {}, nil)
+	win.SetContent(screen.Content)
+
+	emailButton := findButtonByText(screen.Content, "Generate Email")
+	if emailButton == nil {
+		t.Fatal("expected Generate Email button")
+	}
+
+	fyneTest.Tap(emailButton)
+
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		calls, _, language := provider.snapshot()
+		if calls == 1 {
+			if got, want := language, "en"; got != want {
+				t.Fatalf("expected fallback language %q for nil cfg, got %q", want, got)
+			}
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("expected GenerateEmailSummary to be called once, got %d", calls)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func TestEditorDynamicLanguage_EmptyEmailLanguagesFallsBackToEnglishCode(t *testing.T) {
+	app := fyneTest.NewApp()
+	defer app.Quit()
+
+	store := storage.NewStore(t.TempDir())
+	if _, err := store.CreateProject("Test Project", "DLANG4"); err != nil {
+		t.Fatalf("CreateProject returned error: %v", err)
+	}
+
+	meeting, err := store.CreateMeeting(
+		"Empty Config Fallback",
+		time.Date(2026, 4, 19, 0, 0, 0, 0, time.UTC),
+		nil,
+		"DLANG4",
+		nil,
+		"",
+	)
+	if err != nil {
+		t.Fatalf("CreateMeeting returned error: %v", err)
+	}
+
+	if err := store.SaveStructuredNotes(meeting.Project, meeting.ID, "# Structured"); err != nil {
+		t.Fatalf("SaveStructuredNotes returned error: %v", err)
+	}
+
+	provider := &recordingEmailProvider{emailValue: "Email body"}
+	cfg := &config.Config{EmailLanguages: []string{}}
+	win := app.NewWindow("dynamic-language-empty-config")
+	screen := NewEditorScreen(*meeting, store, provider, win, cfg, func() {}, nil)
+	win.SetContent(screen.Content)
+
+	emailButton := findButtonByText(screen.Content, "Generate Email")
+	if emailButton == nil {
+		t.Fatal("expected Generate Email button")
+	}
+
+	fyneTest.Tap(emailButton)
+
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		calls, _, language := provider.snapshot()
+		if calls == 1 {
+			if got, want := language, "en"; got != want {
+				t.Fatalf("expected fallback language %q for empty EmailLanguages, got %q", want, got)
+			}
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("expected GenerateEmailSummary to be called once, got %d", calls)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func TestEditorDynamicLanguage_MaxConfiguredLanguagesAppearInDropdown(t *testing.T) {
+	app := fyneTest.NewApp()
+	defer app.Quit()
+
+	store := storage.NewStore(t.TempDir())
+	if _, err := store.CreateProject("Test Project", "DLANG5"); err != nil {
+		t.Fatalf("CreateProject returned error: %v", err)
+	}
+
+	meeting, err := store.CreateMeeting(
+		"Max Configured Languages",
+		time.Date(2026, 4, 19, 0, 0, 0, 0, time.UTC),
+		nil,
+		"DLANG5",
+		nil,
+		"",
+	)
+	if err != nil {
+		t.Fatalf("CreateMeeting returned error: %v", err)
+	}
+
+	if err := store.SaveStructuredNotes(meeting.Project, meeting.ID, "# Structured"); err != nil {
+		t.Fatalf("SaveStructuredNotes returned error: %v", err)
+	}
+
+	codes := []string{"ja", "zh", "es", "fr", "ar"}
+	provider := &recordingEmailProvider{emailValue: "Email body"}
+	cfg := &config.Config{EmailLanguages: codes}
+	win := app.NewWindow("dynamic-language-max-config")
+	screen := NewEditorScreen(*meeting, store, provider, win, cfg, func() {}, nil)
+	win.SetContent(screen.Content)
+
+	emailButton := findButtonByText(screen.Content, "Generate Email")
+	if emailButton == nil {
+		t.Fatal("expected Generate Email button")
+	}
+
+	fyneTest.Tap(emailButton)
+
+	copyButton := waitForButtonInOverlay(win, "Copy to Clipboard", 2*time.Second)
+	if copyButton == nil {
+		t.Fatal("expected email dialog to be shown")
+	}
+
+	overlay := win.Canvas().Overlays().Top()
+	if overlay == nil {
+		t.Fatal("expected overlay for email dialog")
+	}
+
+	langSelect := findSelectInOverlay(overlay)
+	if langSelect == nil {
+		t.Fatal("expected language select in email dialog")
+	}
+
+	wantNames := []string{
+		languages.DisplayName("ja"),
+		languages.DisplayName("zh"),
+		languages.DisplayName("es"),
+		languages.DisplayName("fr"),
+		languages.DisplayName("ar"),
+	}
+	if got := len(langSelect.Options); got != 5 {
+		t.Fatalf("expected 5 language options, got %d (%v)", got, langSelect.Options)
+	}
+	if got := langSelect.Options; !reflect.DeepEqual(got, wantNames) {
+		t.Fatalf("expected language options %v, got %v", wantNames, got)
 	}
 }

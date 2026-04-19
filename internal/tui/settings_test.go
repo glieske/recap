@@ -1,11 +1,14 @@
 package tui
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/glieske/recap/internal/config"
+	"github.com/glieske/recap/internal/languages"
 )
 
 func TestSettingsModel_GroupCount(t *testing.T) {
@@ -102,7 +105,7 @@ func TestSettingsModel_ConfigFromValues_ValidAndTrimmed(t *testing.T) {
 		openrouterAPIKey: " sk-test ",
 		lmStudioURL:      " https://localhost:1234 ",
 		lmStudioModel:    " local ",
-		emailLanguage:    " en ",
+		emailLanguages:   []string{"en"},
 		notesDir:         " /tmp/notes ",
 	}
 
@@ -119,8 +122,71 @@ func TestSettingsModel_ConfigFromValues_ValidAndTrimmed(t *testing.T) {
 	if cfg.OpenRouterAPIKey != "sk-test" {
 		t.Fatalf("expected OpenRouterAPIKey %q, got %q", "sk-test", cfg.OpenRouterAPIKey)
 	}
+	if len(cfg.EmailLanguages) != 1 || cfg.EmailLanguages[0] != "en" {
+		t.Fatalf("expected EmailLanguages %v, got %v", []string{"en"}, cfg.EmailLanguages)
+	}
 	if cfg.NotesDir != "/tmp/notes" {
 		t.Fatalf("expected NotesDir %q, got %q", "/tmp/notes", cfg.NotesDir)
+	}
+}
+
+func TestSettingsModel_DefaultEmailLanguagesAppliedWhenConfigEmpty(t *testing.T) {
+	model := NewSettingsModel(&config.Config{AIProvider: "github_models"}, "", 80, 24)
+
+	if len(model.values.emailLanguages) != len(languages.DefaultEnabledCodes) {
+		t.Fatalf("expected %d default email languages, got %d", len(languages.DefaultEnabledCodes), len(model.values.emailLanguages))
+	}
+	for i, code := range languages.DefaultEnabledCodes {
+		if model.values.emailLanguages[i] != code {
+			t.Fatalf("expected default language at index %d to be %q, got %q", i, code, model.values.emailLanguages[i])
+		}
+	}
+}
+
+func TestSettingsModel_UsesConfiguredEmailLanguages(t *testing.T) {
+	cfgLangs := []string{"fr", "ja"}
+	model := NewSettingsModel(&config.Config{
+		AIProvider:      "github_models",
+		EmailLanguages:  cfgLangs,
+		GitHubModel:     "gpt-4o",
+		OpenRouterModel: "",
+	}, "", 80, 24)
+
+	if len(model.values.emailLanguages) != 2 {
+		t.Fatalf("expected 2 configured email languages, got %d", len(model.values.emailLanguages))
+	}
+	if model.values.emailLanguages[0] != "fr" || model.values.emailLanguages[1] != "ja" {
+		t.Fatalf("expected configured email languages %v, got %v", cfgLangs, model.values.emailLanguages)
+	}
+}
+
+func TestSettingsSource_MultiLanguageSelectionContracts(t *testing.T) {
+	t.Helper()
+
+	sourcePath := filepath.Join("settings.go")
+	content, err := os.ReadFile(sourcePath)
+	if err != nil {
+		t.Fatalf("expected to read %s, got error: %v", sourcePath, err)
+	}
+	src := string(content)
+
+	requiredSnippets := []string{
+		"huh.NewMultiSelect[string]()",
+		"for _, lang := range languages.AllLanguages",
+		"Limit(languages.MaxSelected)",
+		"len(selected) < languages.MinSelected",
+		"Value(&values.emailLanguages)",
+		"EmailLanguages:   m.values.emailLanguages",
+	}
+
+	for _, snippet := range requiredSnippets {
+		if !strings.Contains(src, snippet) {
+			t.Fatalf("expected settings form source to contain %q", snippet)
+		}
+	}
+
+	if len(languages.AllLanguages) != 13 {
+		t.Fatalf("expected 13 available languages, got %d", len(languages.AllLanguages))
 	}
 }
 
@@ -169,5 +235,111 @@ func TestSettingsModel_ViewIncludesError(t *testing.T) {
 	view := model.View()
 	if !strings.Contains(view.Content, "Error: config cannot be nil") {
 		t.Fatalf("expected error text in view, got %q", view.Content)
+	}
+}
+
+func TestSettingsModel_Adversarial_DefaultsWhenEmailLanguagesNil(t *testing.T) {
+	model := NewSettingsModel(&config.Config{
+		AIProvider:      "github_models",
+		EmailLanguages:  nil,
+		GitHubModel:     "gpt-4o",
+		OpenRouterModel: "",
+	}, "", 80, 24)
+
+	if len(model.values.emailLanguages) != len(languages.DefaultEnabledCodes) {
+		t.Fatalf("expected %d default email languages, got %d", len(languages.DefaultEnabledCodes), len(model.values.emailLanguages))
+	}
+	for i, code := range languages.DefaultEnabledCodes {
+		if model.values.emailLanguages[i] != code {
+			t.Fatalf("expected default language at index %d to be %q, got %q", i, code, model.values.emailLanguages[i])
+		}
+	}
+}
+
+func TestSettingsModel_Adversarial_DefaultsWhenEmailLanguagesEmptySlice(t *testing.T) {
+	model := NewSettingsModel(&config.Config{
+		AIProvider:      "github_models",
+		EmailLanguages:  []string{},
+		GitHubModel:     "gpt-4o",
+		OpenRouterModel: "",
+	}, "", 80, 24)
+
+	if len(model.values.emailLanguages) != len(languages.DefaultEnabledCodes) {
+		t.Fatalf("expected %d default email languages, got %d", len(languages.DefaultEnabledCodes), len(model.values.emailLanguages))
+	}
+	for i, code := range languages.DefaultEnabledCodes {
+		if model.values.emailLanguages[i] != code {
+			t.Fatalf("expected default language at index %d to be %q, got %q", i, code, model.values.emailLanguages[i])
+		}
+	}
+}
+
+func TestSettingsModel_Adversarial_RejectsMoreThanFiveLanguages(t *testing.T) {
+	model := NewSettingsModel(nil, "", 80, 24)
+	model.values = &settingsFormValues{
+		provider:       "github_models",
+		notesDir:       "/tmp/notes",
+		emailLanguages: []string{"en", "pl", "de", "no", "zh", "hi"},
+	}
+
+	_, err := model.configFromValues()
+	if err == nil {
+		t.Fatalf("expected error when selecting more than %d languages", languages.MaxSelected)
+	}
+}
+
+func TestSettingsModel_Adversarial_RejectsInvalidLanguageCodes(t *testing.T) {
+	model := NewSettingsModel(nil, "", 80, 24)
+	model.values = &settingsFormValues{
+		provider:       "github_models",
+		notesDir:       "/tmp/notes",
+		emailLanguages: []string{"en", "xx", "zz"},
+	}
+
+	_, err := model.configFromValues()
+	if err == nil {
+		t.Fatalf("expected error when language list contains invalid codes")
+	}
+}
+
+func TestSettingsModel_Adversarial_RejectsDuplicateLanguageCodes(t *testing.T) {
+	model := NewSettingsModel(nil, "", 80, 24)
+	model.values = &settingsFormValues{
+		provider:       "github_models",
+		notesDir:       "/tmp/notes",
+		emailLanguages: []string{"en", "en", "pl"},
+	}
+
+	_, err := model.configFromValues()
+	if err == nil {
+		t.Fatalf("expected error when language list contains duplicate codes")
+	}
+}
+
+func TestSettingsModel_Adversarial_RejectsVeryLongLanguageCodes(t *testing.T) {
+	model := NewSettingsModel(nil, "", 80, 24)
+	model.values = &settingsFormValues{
+		provider:       "github_models",
+		notesDir:       "/tmp/notes",
+		emailLanguages: []string{"en", strings.Repeat("a", 20000)},
+	}
+
+	_, err := model.configFromValues()
+	if err == nil {
+		t.Fatalf("expected error when language list contains oversized code")
+	}
+}
+
+func TestSettingsModel_Adversarial_RejectsSpecialCharacterLanguageCodes(t *testing.T) {
+	model := NewSettingsModel(nil, "", 80, 24)
+	model.values = &settingsFormValues{
+		provider:       "github_models",
+		notesDir:       "/tmp/notes",
+		emailLanguages: []string{"en", "../", "<script>alert(1)</script>", "ru\x00"},
+	}
+
+	_, err := model.configFromValues()
+	if err == nil {
+		t.Fatalf("expected error when language list contains special-character payloads")
 	}
 }
