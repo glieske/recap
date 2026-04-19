@@ -144,6 +144,21 @@ func TestSplitViewInSplitModeContainsVerticalDivider(t *testing.T) {
 	}
 }
 
+func TestSplitViewInSplitModeIncludesNotesHeader(t *testing.T) {
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
+	m.textarea.SetValue("left pane text")
+	sm := NewSummaryModel("right pane text", "", "", nil, 60, 20)
+	m.SetSummaryModel(sm)
+
+	updated, _ := m.Update(tea.KeyPressMsg{Code: 'p', Mod: tea.ModCtrl})
+	updatedModel := updated.(EditorModel)
+	view := updatedModel.View().Content
+
+	if !strings.Contains(view, "── Notes") {
+		t.Fatalf("expected split view to include notes header %q, got %q", "── Notes", view)
+	}
+}
+
 func TestSplitViewWithoutSplitModeShowsNormalEditorLayout(t *testing.T) {
 	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 	m.textarea.SetValue("normal editor body")
@@ -208,5 +223,19 @@ func TestSplitRenderVerticalDividerHeightVariants(t *testing.T) {
 	}
 	if strings.Count(got, "│") != 3 {
 		t.Fatalf("expected 3 divider rune occurrences, got %d", strings.Count(got, "│"))
+	}
+}
+
+func TestSplitViewIncludesNotesHeaderInSplitMode(t *testing.T) {
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
+	sm := NewSummaryModel("right pane", "", "", nil, 60, 20)
+	m.SetSummaryModel(sm)
+
+	updated, _ := m.Update(tea.KeyPressMsg{Code: 'p', Mod: tea.ModCtrl})
+	splitModel := updated.(EditorModel)
+
+	view := splitModel.View().Content
+	if !strings.Contains(view, "── Notes") {
+		t.Fatalf("expected split view to contain notes header, got: %q", view)
 	}
 }

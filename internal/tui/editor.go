@@ -327,7 +327,8 @@ func (m EditorModel) View() tea.View {
 			rightPaneStyle = focusedStyle
 		}
 
-		leftView := m.textarea.View()
+		notesHeader := lipgloss.NewStyle().Faint(true).Render("── Notes")
+		leftView := notesHeader + "\n" + m.textarea.View()
 		rightView := safeViewContent(func() tea.View { return m.summaryModel.View() })
 		leftPane := leftPaneStyle.Width(leftContentWidth).Render(leftView)
 		rightPane := rightPaneStyle.Width(rightContentWidth).Render(rightView)
