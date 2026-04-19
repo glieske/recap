@@ -47,7 +47,7 @@ type EmailModel struct {
 
 func NewEmailModel(subject, body string, width, height int, language string, version string) EmailModel {
 	if language == "" {
-		language = "pl"
+		language = "en"
 	}
 
 	vp := viewport.New(viewport.WithWidth(width), viewport.WithHeight(emailViewportHeight(height)))
@@ -73,7 +73,7 @@ func nextEmailLanguage(current string) string {
 	case "no":
 		return "en"
 	default:
-		return "pl"
+		return "en"
 	}
 }
 
@@ -86,7 +86,7 @@ func emailLanguageDisplayName(lang string) string {
 	case "no":
 		return "NO"
 	default:
-		return "PL"
+		return "EN"
 	}
 }
 

@@ -91,7 +91,7 @@ func emailLanguageName(language string) string {
 	case "no":
 		return "Norwegian"
 	default:
-		return "Polish"
+		return "English"
 	}
 }
 

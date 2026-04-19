@@ -16,7 +16,7 @@ const (
 	defaultGitHubModel     = "gpt-4o"
 	defaultOpenRouterModel = "google/gemini-flash-1.5"
 	defaultLMStudioURL     = "http://localhost:1234/v1"
-	defaultEmailLanguage   = "pl"
+	defaultEmailLanguage   = "en"
 )
 
 // Config is application configuration loaded from YAML.

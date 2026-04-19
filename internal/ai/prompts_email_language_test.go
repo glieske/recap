@@ -14,8 +14,8 @@ func TestPromptsEmailPromptLanguageSelection(t *testing.T) {
 		{name: "en uses English", language: "en", wantLanguageName: "English"},
 		{name: "pl uses Polish", language: "pl", wantLanguageName: "Polish"},
 		{name: "no uses Norwegian", language: "no", wantLanguageName: "Norwegian"},
-		{name: "empty defaults to Polish", language: "", wantLanguageName: "Polish"},
-		{name: "invalid defaults to Polish", language: "xyz", wantLanguageName: "Polish"},
+		{name: "empty defaults to English", language: "", wantLanguageName: "English"},
+		{name: "invalid defaults to English", language: "xyz", wantLanguageName: "English"},
 	}
 
 	for _, tt := range tests {
@@ -45,7 +45,7 @@ func TestPromptsEmailLanguageNameCaseAndWhitespaceInvariant(t *testing.T) {
 		{input: "\tpl\n", want: "Polish"},
 		{input: "NO", want: "Norwegian"},
 		{input: "  no  ", want: "Norwegian"},
-		{input: "fr", want: "Polish"},
+		{input: "fr", want: "English"},
 	}
 
 	for _, tt := range tests {

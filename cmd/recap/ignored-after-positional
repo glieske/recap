@@ -1,0 +1,8 @@
+notes_dir: /var/folders/l4/h0mdbz8d7gd5_zbwkhl165wr0000gn/T/TestUIAdversarial_UIWithManyExtraArgs_StillRoutesToUI1385073311/001/home/recap
+ai_provider: github_models
+github_model: gpt-4o
+openrouter_model: google/gemini-flash-1.5
+openrouter_api_key: ""
+lm_studio_url: http://localhost:1234/v1
+lm_studio_model: ""
+email_language: pl

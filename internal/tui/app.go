@@ -753,7 +753,7 @@ func (m AppModel) emailLanguage() string {
 		return m.cfg.EmailLanguage
 	}
 
-	return "pl"
+	return "en"
 }
 
 func (m AppModel) delegateActiveModel(msg tea.Msg) (tea.Model, tea.Cmd) {

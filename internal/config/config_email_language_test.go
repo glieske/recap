@@ -8,18 +8,18 @@ import (
 )
 
 func TestConfigEmailLanguageDefaultsAndNormalization(t *testing.T) {
-	t.Run("default config uses pl", func(t *testing.T) {
+	t.Run("default config uses en", func(t *testing.T) {
 		cfg, err := defaultConfig()
 		if err != nil {
 			t.Fatalf("defaultConfig() error = %v", err)
 		}
 
-		if cfg.EmailLanguage != "pl" {
-			t.Fatalf("EmailLanguage = %q, want %q", cfg.EmailLanguage, "pl")
+		if cfg.EmailLanguage != "en" {
+			t.Fatalf("EmailLanguage = %q, want %q", cfg.EmailLanguage, "en")
 		}
 	})
 
-	t.Run("empty email_language normalizes to pl", func(t *testing.T) {
+	t.Run("empty email_language normalizes to en", func(t *testing.T) {
 		configPath := filepath.Join(t.TempDir(), "config.yaml")
 		content := []byte(strings.Join([]string{
 			"notes_dir: /tmp/notes",
@@ -36,12 +36,12 @@ func TestConfigEmailLanguageDefaultsAndNormalization(t *testing.T) {
 			t.Fatalf("Load(%q) error = %v", configPath, err)
 		}
 
-		if cfg.EmailLanguage != "pl" {
-			t.Fatalf("EmailLanguage = %q, want %q", cfg.EmailLanguage, "pl")
+		if cfg.EmailLanguage != "en" {
+			t.Fatalf("EmailLanguage = %q, want %q", cfg.EmailLanguage, "en")
 		}
 	})
 
-	t.Run("invalid email_language normalizes to pl", func(t *testing.T) {
+	t.Run("invalid email_language normalizes to en", func(t *testing.T) {
 		configPath := filepath.Join(t.TempDir(), "config.yaml")
 		content := []byte(strings.Join([]string{
 			"notes_dir: /tmp/notes",
@@ -58,8 +58,8 @@ func TestConfigEmailLanguageDefaultsAndNormalization(t *testing.T) {
 			t.Fatalf("Load(%q) error = %v", configPath, err)
 		}
 
-		if cfg.EmailLanguage != "pl" {
-			t.Fatalf("EmailLanguage = %q, want %q", cfg.EmailLanguage, "pl")
+		if cfg.EmailLanguage != "en" {
+			t.Fatalf("EmailLanguage = %q, want %q", cfg.EmailLanguage, "en")
 		}
 	})
 

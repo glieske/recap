@@ -158,12 +158,40 @@ Common development commands:
 
 ```bash
 make build    # Build binary
+make build-gui # Build with GUI support (requires CGO)
 make install  # Install to $GOPATH/bin
+make run-gui   # Build and launch GUI
 make test     # Run tests
 make lint     # Run go vet
 make fmt      # Format code
 make clean    # Remove binary
 ```
+
+## GUI Mode (Experimental)
+
+`recap` also includes an experimental graphical interface built with Fyne. It requires CGO and system graphics libraries.
+
+### Prerequisites
+
+- **macOS**: Xcode Command Line Tools (`xcode-select --install`)
+- **Linux (Debian/Ubuntu)**: `sudo apt-get install gcc libgl1-mesa-dev xorg-dev`
+- **Linux (Fedora)**: `sudo dnf install gcc mesa-libGL-devel libXcursor-devel libXrandr-devel libXinerama-devel libXi-devel libXxf86vm-devel`
+
+### Build & Run
+
+```bash
+make build-gui   # Build with GUI support
+make run-gui     # Build and launch GUI
+# Or manually:
+CGO_ENABLED=1 go build -tags gui -o recap ./cmd/recap/
+./recap ui
+```
+
+### Cross-Compilation
+
+For cross-platform GUI builds, consider [fyne-cross](https://github.com/fyne-io/fyne-cross) which uses Docker to handle CGO dependencies for each target platform.
+
+> **Note:** The standard `make build` and `go install` commands continue to work without CGO, producing the TUI-only binary.
 
 ## Contributing
 

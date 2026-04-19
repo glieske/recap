@@ -29,8 +29,13 @@ func main() {
 	versionLong := flag.Bool("version", false, "print version and exit")
 	versionShort := flag.Bool("v", false, "print version and exit")
 	autoNew := false
+	runGUI := false
 	if len(os.Args) > 1 && os.Args[1] == "new" {
 		autoNew = true
+		os.Args = append(os.Args[:1], os.Args[2:]...)
+	}
+	if len(os.Args) > 1 && os.Args[1] == "ui" {
+		runGUI = true
 		os.Args = append(os.Args[:1], os.Args[2:]...)
 	}
 	flag.Parse()
@@ -57,6 +62,11 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: AI provider unavailable: %v\n", err)
 		provider = nil
+	}
+
+	if runGUI {
+		runUI(cfg, store, provider, configPath, version)
+		return
 	}
 
 	app := tui.NewAppModel(cfg, store, provider, configPath, autoNew, version)

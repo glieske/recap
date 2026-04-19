@@ -1,10 +1,16 @@
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 BINARY = recap
 
-.PHONY: build install test lint clean fmt release
+.PHONY: build build-gui run-gui install test lint clean fmt release
 
 build:
 	go build -ldflags "-X main.version=$(VERSION)" -o $(BINARY) ./cmd/recap/
+
+build-gui:
+	CGO_ENABLED=1 go build -tags gui -ldflags "-X main.version=$(VERSION)" -o $(BINARY) ./cmd/recap/
+
+run-gui: build-gui
+	./$(BINARY) ui
 
 install:
 	go install -ldflags "-X main.version=$(VERSION)" ./cmd/recap/
