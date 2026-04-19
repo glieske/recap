@@ -60,7 +60,7 @@ func baseSettingsConfig() *config.Config {
 		OpenRouterAPIKey: "",
 		LMStudioURL:      "http://localhost:1234/v1",
 		LMStudioModel:    "",
-		EmailLanguage:    "en",
+		EmailLanguages:   []string{"en"},
 	}
 }
 

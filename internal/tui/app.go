@@ -2,6 +2,7 @@ package tui
 
 import (
 	"strings"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/glieske/recap/internal/ai"
@@ -306,6 +307,8 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.aiRunning = true
 		m.statusMsg = "Structuring notes..."
+		m.editorModel.statusMsg = "⏳ Structuring notes..."
+		m.editorModel.statusExpiry = time.Now().Add(10 * time.Minute)
 		return m, StructureNotesCmd(m.provider, rawNotes, meta)
 	case TriggerEmailMsg:
 		if m.structuredMD == "" || m.provider == nil {
@@ -314,11 +317,15 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.aiRunning = true
 		m.statusMsg = "Generating email..."
+		m.editorModel.statusMsg = "⏳ Generating email..."
+		m.editorModel.statusExpiry = time.Now().Add(10 * time.Minute)
 		return m, GenerateEmailCmd(m.provider, m.structuredMD, m.emailLanguage())
 	case AIStructureDoneMsg:
 		m.aiRunning = false
 		m.structuredMD = typedMsg.StructuredMD
 		m.statusMsg = "Structured notes updated"
+		m.editorModel.statusMsg = "✓ Structured notes updated"
+		m.editorModel.statusExpiry = time.Now().Add(5 * time.Second)
 
 		if m.currentMeeting != nil && m.store != nil {
 			saveErr := m.store.SaveStructuredNotes(m.currentMeeting.Project, m.currentMeeting.ID, typedMsg.StructuredMD)
@@ -339,10 +346,13 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.aiRunning = false
 		m.err = typedMsg.Err
 		m.statusMsg = ""
+		m.editorModel.statusMsg = ""
 		return m, nil
 	case AIEmailDoneMsg:
 		m.aiRunning = false
 		m.statusMsg = "Email generated"
+		m.editorModel.statusMsg = "✓ Email generated"
+		m.editorModel.statusExpiry = time.Now().Add(5 * time.Second)
 		m.emailModel = NewEmailModel(typedMsg.Subject, typedMsg.Body, m.width, m.height, m.emailLanguage(), m.version)
 		m.hasEmailModel = true
 		m.screen = ScreenEmail
@@ -351,25 +361,25 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.aiRunning = false
 		m.err = typedMsg.Err
 		m.statusMsg = ""
+		m.editorModel.statusMsg = ""
 		m.emailModel.statusMsg = ""
 		return m, nil
 	case TogglePreviewMsg:
 		return m, nil
 	case LanguageChangedMsg:
-		if m.cfg != nil {
-			m.cfg.EmailLanguage = typedMsg.Language
-		}
 		m.emailModel.language = typedMsg.Language
 		m.showLanguage = false
 		if m.screen == ScreenEmail && m.structuredMD != "" && m.provider != nil {
 			m.aiRunning = true
 			m.statusMsg = "Regenerating email..."
+			m.editorModel.statusMsg = "⏳ Regenerating email..."
+			m.editorModel.statusExpiry = time.Now().Add(10 * time.Minute)
 			m.emailModel.statusMsg = "Regenerating email..."
 			return m, GenerateEmailCmd(m.provider, m.structuredMD, typedMsg.Language)
 		}
 		return m, nil
 	case ShowLanguageModalMsg:
-		m.languageModel = NewLanguageSelectModel(typedMsg.CurrentLanguage)
+		m.languageModel = NewLanguageSelectModel(typedMsg.CurrentLanguage, m.configuredLanguages())
 		m.showLanguage = true
 		m.languageModal = NewModalModel("Language", &m.languageModel, m.width, m.height)
 		return m, m.languageModal.Init()
@@ -380,6 +390,8 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.aiRunning = true
 		m.statusMsg = "Generating email..."
+		m.editorModel.statusMsg = "⏳ Generating email..."
+		m.editorModel.statusExpiry = time.Now().Add(10 * time.Minute)
 		m.emailModel.statusMsg = "Generating email..."
 		return m, GenerateEmailCmd(m.provider, m.structuredMD, m.emailLanguage())
 	case ProviderSelectedMsg:
@@ -406,6 +418,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case SettingsUpdatedMsg:
 		m.showSettings = false
 		if typedMsg.Config != nil {
+			m.cfg = typedMsg.Config
 			newProvider, provErr := m.providerFactory(typedMsg.Config)
 			if provErr != nil {
 				m.err = provErr
@@ -471,6 +484,8 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.aiRunning = true
 			m.statusMsg = "Structuring notes..."
+			m.editorModel.statusMsg = "⏳ Structuring notes..."
+			m.editorModel.statusExpiry = time.Now().Add(10 * time.Minute)
 			return m, StructureNotesCmd(m.provider, rawNotes, meta)
 		case "switch-provider":
 			currentProv := ""
@@ -749,11 +764,19 @@ func (m AppModel) providerDisplayInfo() (name string, model string) {
 }
 
 func (m AppModel) emailLanguage() string {
-	if m.cfg != nil && m.cfg.EmailLanguage != "" {
-		return m.cfg.EmailLanguage
+	configured := m.configuredLanguages()
+	if len(configured) > 0 {
+		return configured[0]
+	}
+	return "en"
+}
+
+func (m AppModel) configuredLanguages() []string {
+	if m.cfg != nil && len(m.cfg.EmailLanguages) > 0 {
+		return m.cfg.EmailLanguages
 	}
 
-	return "pl"
+	return []string{"en"}
 }
 
 func (m AppModel) delegateActiveModel(msg tea.Msg) (tea.Model, tea.Cmd) {

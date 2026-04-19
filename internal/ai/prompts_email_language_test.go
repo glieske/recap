@@ -14,8 +14,18 @@ func TestPromptsEmailPromptLanguageSelection(t *testing.T) {
 		{name: "en uses English", language: "en", wantLanguageName: "English"},
 		{name: "pl uses Polish", language: "pl", wantLanguageName: "Polish"},
 		{name: "no uses Norwegian", language: "no", wantLanguageName: "Norwegian"},
-		{name: "empty defaults to Polish", language: "", wantLanguageName: "Polish"},
-		{name: "invalid defaults to Polish", language: "xyz", wantLanguageName: "Polish"},
+		{name: "de uses German", language: "de", wantLanguageName: "German"},
+		{name: "zh uses Chinese", language: "zh", wantLanguageName: "Chinese"},
+		{name: "es uses Spanish", language: "es", wantLanguageName: "Spanish"},
+		{name: "fr uses French", language: "fr", wantLanguageName: "French"},
+		{name: "ar uses Arabic", language: "ar", wantLanguageName: "Arabic"},
+		{name: "bn uses Bengali", language: "bn", wantLanguageName: "Bengali"},
+		{name: "pt uses Portuguese", language: "pt", wantLanguageName: "Portuguese"},
+		{name: "ru uses Russian", language: "ru", wantLanguageName: "Russian"},
+		{name: "ja uses Japanese", language: "ja", wantLanguageName: "Japanese"},
+		{name: "hi uses Hindi", language: "hi", wantLanguageName: "Hindi"},
+		{name: "empty defaults to English", language: "", wantLanguageName: "English"},
+		{name: "invalid defaults to English", language: "xyz", wantLanguageName: "English"},
 	}
 
 	for _, tt := range tests {
@@ -34,7 +44,7 @@ func TestPromptsEmailPromptLanguageSelection(t *testing.T) {
 	}
 }
 
-func TestPromptsEmailLanguageNameCaseAndWhitespaceInvariant(t *testing.T) {
+func TestPromptsEmailPromptCaseAndWhitespaceInvariant(t *testing.T) {
 	tests := []struct {
 		input string
 		want  string
@@ -45,12 +55,18 @@ func TestPromptsEmailLanguageNameCaseAndWhitespaceInvariant(t *testing.T) {
 		{input: "\tpl\n", want: "Polish"},
 		{input: "NO", want: "Norwegian"},
 		{input: "  no  ", want: "Norwegian"},
-		{input: "fr", want: "Polish"},
+		{input: "DE", want: "German"},
+		{input: " de ", want: "German"},
+		{input: "unknown", want: "English"},
 	}
 
 	for _, tt := range tests {
-		if got := emailLanguageName(tt.input); got != tt.want {
-			t.Fatalf("emailLanguageName(%q) = %q, want %q", tt.input, got, tt.want)
-		}
+		t.Run(tt.input, func(t *testing.T) {
+			messages := EmailPrompt("notes", tt.input)
+			system := messages[0].Content
+			if !strings.Contains(system, tt.want) {
+				t.Fatalf("EmailPrompt(%q) system message does not contain %q", tt.input, tt.want)
+			}
+		})
 	}
 }

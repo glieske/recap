@@ -1,16 +1,23 @@
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 BINARY = recap
 
-.PHONY: build install test lint clean fmt release
+.PHONY: build build-gui run-gui install test lint clean fmt release
 
 build:
 	go build -ldflags "-X main.version=$(VERSION)" -o $(BINARY) ./cmd/recap/
+
+build-gui:
+	CGO_ENABLED=1 go build -tags gui -ldflags "-X main.version=$(VERSION)" -o $(BINARY) ./cmd/recap/
+
+run-gui: build-gui
+	./$(BINARY) ui
 
 install:
 	go install -ldflags "-X main.version=$(VERSION)" ./cmd/recap/
 
 test:
 	go test ./... -v -count=1
+	CGO_ENABLED=1 go test -tags gui ./internal/gui/... -v -count=1
 
 lint:
 	go vet ./...
@@ -35,7 +42,8 @@ release:
 	echo "Running lint..."; \
 	go vet ./... || exit 1; \
 	echo "Running tests..."; \
-	go test ./... || exit 1; \
+	go test ./... -count=1 || exit 1; \
+	CGO_ENABLED=1 go test -tags gui ./internal/gui/... -count=1 || exit 1; \
 	git tag "$$VERSION_INPUT"; \
 	echo "Tag $$VERSION_INPUT created."; \
 	read -p "Push tag $$VERSION_INPUT to origin? [y/N] " CONFIRM_PUSH; \

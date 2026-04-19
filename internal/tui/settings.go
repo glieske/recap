@@ -7,6 +7,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/huh/v2"
 	"github.com/glieske/recap/internal/config"
+	"github.com/glieske/recap/internal/languages"
 )
 
 type SettingsUpdatedMsg struct {
@@ -20,7 +21,7 @@ type settingsFormValues struct {
 	openrouterAPIKey string
 	lmStudioURL      string
 	lmStudioModel    string
-	emailLanguage    string
+	emailLanguages   []string
 	notesDir         string
 }
 
@@ -45,7 +46,7 @@ func NewSettingsModel(cfg *config.Config, configPath string, width, height int) 
 		values.openrouterAPIKey = cfg.OpenRouterAPIKey
 		values.lmStudioURL = cfg.LMStudioURL
 		values.lmStudioModel = cfg.LMStudioModel
-		values.emailLanguage = cfg.EmailLanguage
+		values.emailLanguages = cfg.EmailLanguages
 		values.notesDir = cfg.NotesDir
 	}
 
@@ -53,8 +54,8 @@ func NewSettingsModel(cfg *config.Config, configPath string, width, height int) 
 		values.provider = "github_models"
 	}
 
-	if values.emailLanguage != "en" && values.emailLanguage != "pl" && values.emailLanguage != "no" {
-		values.emailLanguage = "en"
+	if len(values.emailLanguages) == 0 {
+		values.emailLanguages = languages.DefaultEnabledCodes
 	}
 
 	model := SettingsModel{
@@ -157,6 +158,23 @@ func (m SettingsModel) configFromValues() (*config.Config, error) {
 		return nil, fmt.Errorf("LM Studio URL must start with http:// or https://")
 	}
 
+	if len(m.values.emailLanguages) > languages.MaxSelected {
+		return nil, fmt.Errorf("too many languages selected (max %d)", languages.MaxSelected)
+	}
+
+	seen := make(map[string]bool, len(m.values.emailLanguages))
+	for _, code := range m.values.emailLanguages {
+		if !languages.ValidCode(code) {
+			return nil, fmt.Errorf("invalid language code: %s", code)
+		}
+
+		if seen[code] {
+			return nil, fmt.Errorf("duplicate language code: %s", code)
+		}
+
+		seen[code] = true
+	}
+
 	return &config.Config{
 		NotesDir:         notesDirValue,
 		AIProvider:       providerValue,
@@ -165,7 +183,7 @@ func (m SettingsModel) configFromValues() (*config.Config, error) {
 		OpenRouterAPIKey: strings.TrimSpace(m.values.openrouterAPIKey),
 		LMStudioURL:      lmStudioURLValue,
 		LMStudioModel:    strings.TrimSpace(m.values.lmStudioModel),
-		EmailLanguage:    strings.TrimSpace(m.values.emailLanguage),
+		EmailLanguages:   m.values.emailLanguages,
 	}, nil
 }
 
@@ -216,14 +234,31 @@ func buildSettingsForm(values *settingsFormValues) *huh.Form {
 				Value(&values.lmStudioModel),
 		).WithHideFunc(func() bool { return values.provider != "lm_studio" }),
 		huh.NewGroup(
-			huh.NewSelect[string]().
-				Title("Email Language").
-				Options(
-					huh.NewOption("English", "en"),
-					huh.NewOption("Polish", "pl"),
-					huh.NewOption("Norwegian", "no"),
-				).
-				Value(&values.emailLanguage),
+			huh.NewMultiSelect[string]().
+				Title("Email Languages").
+				Options(func() []huh.Option[string] {
+					opts := make([]huh.Option[string], 0, len(languages.AllLanguages))
+					for _, lang := range languages.AllLanguages {
+						opt := huh.NewOption(lang.Name, lang.Code)
+						for _, sel := range values.emailLanguages {
+							if sel == lang.Code {
+								opt = opt.Selected(true)
+								break
+							}
+						}
+						opts = append(opts, opt)
+					}
+					return opts
+				}()...).
+				Limit(languages.MaxSelected).
+				Value(&values.emailLanguages).
+				Validate(func(selected []string) error {
+					if len(selected) < languages.MinSelected {
+						return fmt.Errorf("select at least %d language", languages.MinSelected)
+					}
+
+					return nil
+				}),
 		),
 		huh.NewGroup(
 			huh.NewInput().

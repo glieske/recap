@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/glieske/recap/internal/languages"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
@@ -16,19 +17,18 @@ const (
 	defaultGitHubModel     = "gpt-4o"
 	defaultOpenRouterModel = "google/gemini-flash-1.5"
 	defaultLMStudioURL     = "http://localhost:1234/v1"
-	defaultEmailLanguage   = "pl"
 )
 
 // Config is application configuration loaded from YAML.
 type Config struct {
-	NotesDir         string `mapstructure:"notes_dir" yaml:"notes_dir"`
-	AIProvider       string `mapstructure:"ai_provider" yaml:"ai_provider"`
-	GitHubModel      string `mapstructure:"github_model" yaml:"github_model"`
-	OpenRouterModel  string `mapstructure:"openrouter_model" yaml:"openrouter_model"`
-	OpenRouterAPIKey string `mapstructure:"openrouter_api_key" yaml:"openrouter_api_key"`
-	LMStudioURL      string `mapstructure:"lm_studio_url" yaml:"lm_studio_url"`
-	LMStudioModel    string `mapstructure:"lm_studio_model" yaml:"lm_studio_model"`
-	EmailLanguage    string `mapstructure:"email_language" yaml:"email_language"`
+	NotesDir         string   `mapstructure:"notes_dir" yaml:"notes_dir"`
+	AIProvider       string   `mapstructure:"ai_provider" yaml:"ai_provider"`
+	GitHubModel      string   `mapstructure:"github_model" yaml:"github_model"`
+	OpenRouterModel  string   `mapstructure:"openrouter_model" yaml:"openrouter_model"`
+	OpenRouterAPIKey string   `mapstructure:"openrouter_api_key" yaml:"openrouter_api_key"`
+	LMStudioURL      string   `mapstructure:"lm_studio_url" yaml:"lm_studio_url"`
+	LMStudioModel    string   `mapstructure:"lm_studio_model" yaml:"lm_studio_model"`
+	EmailLanguages   []string `mapstructure:"email_languages" yaml:"email_languages"`
 }
 
 // DefaultConfigPath returns the platform-appropriate config file path.
@@ -183,7 +183,7 @@ func defaultConfig() (*Config, error) {
 		OpenRouterAPIKey: "",
 		LMStudioURL:      defaultLMStudioURL,
 		LMStudioModel:    "",
-		EmailLanguage:    defaultEmailLanguage,
+		EmailLanguages:   append([]string{}, languages.DefaultEnabledCodes...),
 	}, nil
 }
 
@@ -208,12 +208,28 @@ func applyDefaultsAndNormalize(cfg *Config) error {
 		cfg.LMStudioURL = defaultLMStudioURL
 	}
 
-	if cfg.EmailLanguage == "" {
-		cfg.EmailLanguage = defaultEmailLanguage
+	// Default to all default languages if still empty.
+	if len(cfg.EmailLanguages) == 0 {
+		cfg.EmailLanguages = append([]string{}, languages.DefaultEnabledCodes...)
 	}
 
-	if cfg.EmailLanguage != "en" && cfg.EmailLanguage != "pl" && cfg.EmailLanguage != "no" {
-		cfg.EmailLanguage = defaultEmailLanguage
+	// Filter out invalid language codes.
+	valid := make([]string, 0, len(cfg.EmailLanguages))
+	for _, code := range cfg.EmailLanguages {
+		if languages.ValidCode(code) {
+			valid = append(valid, code)
+		}
+	}
+	cfg.EmailLanguages = valid
+
+	// Enforce minimum: fallback to defaults if all codes were invalid.
+	if len(cfg.EmailLanguages) < languages.MinSelected {
+		cfg.EmailLanguages = append([]string{}, languages.DefaultEnabledCodes...)
+	}
+
+	// Enforce maximum: truncate to MaxSelected.
+	if len(cfg.EmailLanguages) > languages.MaxSelected {
+		cfg.EmailLanguages = cfg.EmailLanguages[:languages.MaxSelected]
 	}
 
 	if cfg.NotesDir == "" {

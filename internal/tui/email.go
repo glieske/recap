@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"charm.land/bubbles/v2/viewport"
@@ -47,7 +48,7 @@ type EmailModel struct {
 
 func NewEmailModel(subject, body string, width, height int, language string, version string) EmailModel {
 	if language == "" {
-		language = "pl"
+		language = "en"
 	}
 
 	vp := viewport.New(viewport.WithWidth(width), viewport.WithHeight(emailViewportHeight(height)))
@@ -64,30 +65,23 @@ func NewEmailModel(subject, body string, width, height int, language string, ver
 	}
 }
 
-func nextEmailLanguage(current string) string {
-	switch current {
-	case "en":
-		return "pl"
-	case "pl":
-		return "no"
-	case "no":
+func nextEmailLanguage(current string, configured []string) string {
+	if len(configured) == 0 {
 		return "en"
-	default:
-		return "pl"
 	}
+
+	for i, code := range configured {
+		if code == current {
+			nextIndex := (i + 1) % len(configured)
+			return configured[nextIndex]
+		}
+	}
+
+	return configured[0]
 }
 
 func emailLanguageDisplayName(lang string) string {
-	switch lang {
-	case "en":
-		return "EN"
-	case "pl":
-		return "PL"
-	case "no":
-		return "NO"
-	default:
-		return "PL"
-	}
+	return strings.ToUpper(lang)
 }
 
 func (m EmailModel) Init() tea.Cmd {

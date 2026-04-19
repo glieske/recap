@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime/debug"
 	"strings"
@@ -136,4 +138,95 @@ func TestInitVersionIsAlwaysNonEmpty(t *testing.T) {
 	if version == "" {
 		t.Fatalf("expected version to be non-empty")
 	}
+}
+
+func TestRunUIStub_PrintsExpectedMessageAndExitsWithCode1(t *testing.T) {
+	t.Setenv("RECAP_HELPER_PROCESS", "0")
+
+	cmd := exec.Command(os.Args[0], "-test.run=TestHelperProcessRunUIStub")
+	cmd.Env = append(os.Environ(),
+		"RECAP_HELPER_PROCESS=1",
+		"RECAP_HELPER_MODE=run_ui_stub",
+	)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err == nil {
+		t.Fatalf("expected helper process to exit with non-zero code")
+	}
+
+	exitErr, ok := err.(*exec.ExitError)
+	if !ok {
+		t.Fatalf("expected *exec.ExitError, got %T", err)
+	}
+	if exitErr.ExitCode() != 1 {
+		t.Fatalf("expected exit code 1, got %d", exitErr.ExitCode())
+	}
+
+	if stdout.String() != "" {
+		t.Fatalf("expected empty stdout, got %q", stdout.String())
+	}
+
+	const wantStderr = "GUI not available — rebuild with: go build -tags gui\n"
+	if stderr.String() != wantStderr {
+		t.Fatalf("unexpected stderr\nwant: %q\n got: %q", wantStderr, stderr.String())
+	}
+}
+
+func TestHelperProcessRunUIStub(t *testing.T) {
+	if os.Getenv("RECAP_HELPER_PROCESS") != "1" || os.Getenv("RECAP_HELPER_MODE") != "run_ui_stub" {
+		return
+	}
+
+	runUI(nil, nil, nil, "", "test")
+	t.Fatalf("runUI should have exited with code 1")
+}
+
+func TestMainWithoutUISubcommand_DoesNotInvokeUIStub(t *testing.T) {
+	t.Setenv("RECAP_HELPER_PROCESS", "0")
+
+	cmd := exec.Command(os.Args[0], "-test.run=TestHelperProcessMainVersionPath")
+	cmd.Env = append(os.Environ(),
+		"RECAP_HELPER_PROCESS=1",
+		"RECAP_HELPER_MODE=main_version",
+	)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		t.Fatalf("expected helper process to exit successfully, got error: %v", err)
+	}
+
+	if !strings.Contains(stdout.String(), "recap version ") {
+		t.Fatalf("expected stdout to contain %q, got %q", "recap version ", stdout.String())
+	}
+
+	if strings.Contains(stdout.String(), "GUI not available") {
+		t.Fatalf("did not expect UI stub message in stdout: %q", stdout.String())
+	}
+
+	if stderr.String() != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr.String())
+	}
+}
+
+func TestHelperProcessMainVersionPath(t *testing.T) {
+	if os.Getenv("RECAP_HELPER_PROCESS") != "1" || os.Getenv("RECAP_HELPER_MODE") != "main_version" {
+		return
+	}
+
+	originalArgs := os.Args
+	defer func() { os.Args = originalArgs }()
+
+	os.Args = []string{"recap", "--version"}
+	main()
+	os.Exit(0)
 }
