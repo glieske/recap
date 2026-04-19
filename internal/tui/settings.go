@@ -180,9 +180,13 @@ func buildSettingsForm(values *settingsFormValues) *huh.Form {
 					huh.NewOption("LM Studio", "lm_studio"),
 				).
 				Value(&values.provider),
+		),
+		huh.NewGroup(
 			huh.NewInput().
 				Title("GitHub Model Name").
 				Value(&values.githubModel),
+		).WithHideFunc(func() bool { return values.provider != "github_models" }),
+		huh.NewGroup(
 			huh.NewInput().
 				Title("OpenRouter Model").
 				Value(&values.openrouterModel),
@@ -190,6 +194,8 @@ func buildSettingsForm(values *settingsFormValues) *huh.Form {
 				Title("OpenRouter API Key").
 				EchoMode(huh.EchoModePassword).
 				Value(&values.openrouterAPIKey),
+		).WithHideFunc(func() bool { return values.provider != "openrouter" }),
+		huh.NewGroup(
 			huh.NewInput().
 				Title("LM Studio URL").
 				Value(&values.lmStudioURL).
@@ -208,7 +214,7 @@ func buildSettingsForm(values *settingsFormValues) *huh.Form {
 			huh.NewInput().
 				Title("LM Studio Model").
 				Value(&values.lmStudioModel),
-		),
+		).WithHideFunc(func() bool { return values.provider != "lm_studio" }),
 		huh.NewGroup(
 			huh.NewSelect[string]().
 				Title("Email Language").
