@@ -46,7 +46,7 @@ func TestAdversarial_KeyPressMsg_Malformed_NoPanics(t *testing.T) {
 		}
 	})
 
-	email := NewEmailModel("", "", 80, 24, "pl")
+	email := NewEmailModel("", "", 80, 24, "pl", "")
 	requireNoPanic(t, "EmailModel.Update malformed key", func() {
 		updated, _ := email.Update(malformed)
 		typed, ok := updated.(EmailModel)
@@ -156,7 +156,7 @@ func TestAdversarial_WindowSize_ZeroAndNegative_NoPanics(t *testing.T) {
 		}
 	})
 
-	email := NewEmailModel("", "", 80, 24, "pl")
+	email := NewEmailModel("", "", 80, 24, "pl", "")
 	requireNoPanic(t, "EmailModel.Update zero window", func() {
 		updated, _ := email.Update(windowMsg)
 		typed, ok := updated.(EmailModel)
@@ -219,7 +219,7 @@ func TestAdversarial_ViewComposition_NilLikeChildren_NoPanics(t *testing.T) {
 			testApp.editorModel = NewEditorModel(nil, nil, 0, 0, "", "", "")
 		case ScreenEmail:
 			testApp.hasEmailModel = true
-			testApp.emailModel = NewEmailModel("", "", 0, 0, "en")
+			testApp.emailModel = NewEmailModel("", "", 0, 0, "en", "")
 		case ScreenProviderSelector:
 			testApp.hasProviderModel = true
 			testApp.providerModel = NewProviderModel("", 0, 0)

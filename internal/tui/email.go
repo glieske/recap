@@ -38,13 +38,14 @@ type EmailModel struct {
 	subject      string
 	body         string
 	language     string
+	version      string
 	width        int
 	height       int
 	clipboardErr error
 	statusMsg    string
 }
 
-func NewEmailModel(subject, body string, width, height int, language string) EmailModel {
+func NewEmailModel(subject, body string, width, height int, language string, version string) EmailModel {
 	if language == "" {
 		language = "pl"
 	}
@@ -57,6 +58,7 @@ func NewEmailModel(subject, body string, width, height int, language string) Ema
 		subject:  subject,
 		body:     body,
 		language: language,
+		version:  version,
 		width:    width,
 		height:   height,
 	}
@@ -108,8 +110,7 @@ func (m EmailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyPressMsg:
 		switch typedMsg.String() {
 		case "l":
-			m.language = nextEmailLanguage(m.language)
-			return m, func() tea.Msg { return LanguageChangedMsg{Language: m.language} }
+			return m, func() tea.Msg { return ShowLanguageModalMsg{CurrentLanguage: m.language} }
 		case "c":
 			if m.subject == "" && m.body == "" {
 				m.statusMsg = "Nothing to copy"
@@ -156,11 +157,18 @@ func (m EmailModel) View() tea.View {
 	footerStyle := lipgloss.NewStyle().Faint(true)
 
 	header := headerStyle.Render("── Email Summary ──")
-	footerText := fmt.Sprintf("c copy • r regenerate • l lang:%s • Esc back", emailLanguageDisplayName(m.language))
+	left := fmt.Sprintf("c copy • r regenerate • l lang:%s • Esc back", emailLanguageDisplayName(m.language))
 
 	if m.statusMsg != "" {
-		footerText = m.statusMsg
+		left = m.statusMsg
 	}
+
+	right := ""
+	if m.version != "" {
+		right = "recap " + m.version
+	}
+
+	footerText := composeStatusLine(left, "", right, m.width)
 
 	footer := footerStyle.Render(footerText)
 

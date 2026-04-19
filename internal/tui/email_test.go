@@ -21,7 +21,7 @@ func updateEmailModelForTest(t *testing.T, m EmailModel, msg tea.Msg) (EmailMode
 }
 
 func TestNewEmailModelWithContent(t *testing.T) {
-	m := NewEmailModel("Weekly Sync Summary", "Hello team,\nMeeting notes attached.", 120, 30, "pl")
+	m := NewEmailModel("Weekly Sync Summary", "Hello team,\nMeeting notes attached.", 120, 30, "pl", "")
 
 	if m.subject != "Weekly Sync Summary" {
 		t.Fatalf("expected subject to be stored, got %q", m.subject)
@@ -42,7 +42,7 @@ func TestNewEmailModelWithContent(t *testing.T) {
 }
 
 func TestNewEmailModelEmpty(t *testing.T) {
-	m := NewEmailModel("", "", 120, 30, "pl")
+	m := NewEmailModel("", "", 120, 30, "pl", "")
 
 	if m.subject != "" || m.body != "" {
 		t.Fatalf("expected empty subject and body, got subject=%q body=%q", m.subject, m.body)
@@ -54,7 +54,7 @@ func TestNewEmailModelEmpty(t *testing.T) {
 }
 
 func TestEmailEscNavigates(t *testing.T) {
-	m := NewEmailModel("Subject", "Body", 120, 30, "pl")
+	m := NewEmailModel("Subject", "Body", 120, 30, "pl", "")
 
 	_, cmd := updateEmailModelForTest(t, m, tea.KeyPressMsg{Code: tea.KeyEscape})
 	if cmd == nil {
@@ -73,7 +73,7 @@ func TestEmailEscNavigates(t *testing.T) {
 }
 
 func TestEmailRReturnsRegenerate(t *testing.T) {
-	m := NewEmailModel("Subject", "Body", 120, 30, "pl")
+	m := NewEmailModel("Subject", "Body", 120, 30, "pl", "")
 
 	_, cmd := updateEmailModelForTest(t, m, tea.KeyPressMsg{Text: "r"})
 	if cmd == nil {
@@ -86,7 +86,7 @@ func TestEmailRReturnsRegenerate(t *testing.T) {
 }
 
 func TestEmailCCopiesClipboard(t *testing.T) {
-	m := NewEmailModel("Subject", "Body", 120, 30, "pl")
+	m := NewEmailModel("Subject", "Body", 120, 30, "pl", "")
 
 	_, cmd := updateEmailModelForTest(t, m, tea.KeyPressMsg{Text: "c"})
 	if cmd == nil {
@@ -95,7 +95,7 @@ func TestEmailCCopiesClipboard(t *testing.T) {
 }
 
 func TestEmailContentMsgUpdates(t *testing.T) {
-	m := NewEmailModel("Old subject", "Old body", 120, 30, "pl")
+	m := NewEmailModel("Old subject", "Old body", 120, 30, "pl", "")
 
 	updated, cmd := updateEmailModelForTest(t, m, EmailContentMsg{Subject: "New subject", Body: "New body"})
 	if cmd != nil {
@@ -116,7 +116,7 @@ func TestEmailContentMsgUpdates(t *testing.T) {
 }
 
 func TestEmailWindowResize(t *testing.T) {
-	m := NewEmailModel("Subject", "Body", 80, 20, "pl")
+	m := NewEmailModel("Subject", "Body", 80, 20, "pl", "")
 
 	updated, cmd := updateEmailModelForTest(t, m, tea.WindowSizeMsg{Width: 140, Height: 40})
 	if cmd != nil {
@@ -133,7 +133,7 @@ func TestEmailWindowResize(t *testing.T) {
 }
 
 func TestEmailViewContainsHeader(t *testing.T) {
-	m := NewEmailModel("Subject", "Body", 120, 30, "pl")
+	m := NewEmailModel("Subject", "Body", 120, 30, "pl", "")
 
 	view := m.View().Content
 	if !strings.Contains(view, "Email Summary") {
@@ -142,7 +142,7 @@ func TestEmailViewContainsHeader(t *testing.T) {
 }
 
 func TestEmailViewContainsFooter(t *testing.T) {
-	m := NewEmailModel("Subject", "Body", 120, 30, "pl")
+	m := NewEmailModel("Subject", "Body", 120, 30, "pl", "")
 
 	view := m.View().Content
 	if !strings.Contains(view, "c copy") || !strings.Contains(view, "r regenerate") || !strings.Contains(view, "Esc back") {
@@ -151,7 +151,7 @@ func TestEmailViewContainsFooter(t *testing.T) {
 }
 
 func TestEmailClipboardDoneSetsStatus(t *testing.T) {
-	m := NewEmailModel("Subject", "Body", 120, 30, "pl")
+	m := NewEmailModel("Subject", "Body", 120, 30, "pl", "")
 
 	updated, cmd := updateEmailModelForTest(t, m, ClipboardDoneMsg{})
 	if cmd == nil {
@@ -164,7 +164,7 @@ func TestEmailClipboardDoneSetsStatus(t *testing.T) {
 }
 
 func TestEmailClipboardErrSetsStatus(t *testing.T) {
-	m := NewEmailModel("Subject", "Body", 120, 30, "pl")
+	m := NewEmailModel("Subject", "Body", 120, 30, "pl", "")
 
 	updated, cmd := updateEmailModelForTest(t, m, ClipboardErrMsg{Err: errors.New("not available")})
 	if cmd == nil {
@@ -181,7 +181,7 @@ func TestEmailClipboardErrSetsStatus(t *testing.T) {
 }
 
 func TestEmailClearStatusMsg(t *testing.T) {
-	m := NewEmailModel("Subject", "Body", 120, 30, "pl")
+	m := NewEmailModel("Subject", "Body", 120, 30, "pl", "")
 	m.statusMsg = "Copied to clipboard!"
 
 	updated, cmd := updateEmailModelForTest(t, m, ClearStatusMsg{})
@@ -195,7 +195,7 @@ func TestEmailClearStatusMsg(t *testing.T) {
 }
 
 func TestEmailCopyEmptyContent(t *testing.T) {
-	m := NewEmailModel("", "", 120, 30, "pl")
+	m := NewEmailModel("", "", 120, 30, "pl", "")
 
 	updated, cmd := updateEmailModelForTest(t, m, tea.KeyPressMsg{Text: "c"})
 	if cmd == nil {

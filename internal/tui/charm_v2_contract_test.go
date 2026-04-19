@@ -49,7 +49,7 @@ func TestCharmV2_ViewMethodsReturnTeaView(t *testing.T) {
 		NewListModel(nil, 80, 24).View(),
 		NewNewMeetingModel(nil, 80, 24).View(),
 		NewEditorModel(nil, nil, 80, 24, "", "", "").View(),
-		NewEmailModel("subject", "body", 80, 24, "en").View(),
+		NewEmailModel("subject", "body", 80, 24, "en", "").View(),
 		NewHelpModel().View(),
 		NewProviderModel("", 80, 24).View(),
 		NewPreviewModel("body", "title", 80, 24).View(),
@@ -96,7 +96,7 @@ func TestCharmV2_AppUpdateAcceptsKeyPressMsg(t *testing.T) {
 }
 
 func TestCharmV2_ViewportAndTextareaResizeViaSetters(t *testing.T) {
-	email := NewEmailModel("subject", "body", 20, 10, "en")
+	email := NewEmailModel("subject", "body", 20, 10, "en", "")
 	updatedEmailModel, _ := email.Update(tea.WindowSizeMsg{Width: 111, Height: 55})
 	updatedEmail, ok := updatedEmailModel.(EmailModel)
 	if !ok {
@@ -399,7 +399,7 @@ func TestCharmV2_AdditionalPublicAPIContracts(t *testing.T) {
 		t.Fatalf("HelpModel.View content mismatch: got %q", help.View().Content)
 	}
 
-	email := NewEmailModel("Sub", "Body", 80, 24, "en")
+	email := NewEmailModel("Sub", "Body", 80, 24, "en", "")
 	if got := email.Init(); got != nil {
 		t.Fatalf("EmailModel.Init mismatch: got %v want nil", got)
 	}

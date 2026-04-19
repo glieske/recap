@@ -228,7 +228,7 @@ func TestAppEscFromNewMeetingReturnsToMeetingList(t *testing.T) {
 func TestAppEscFromEmailReturnsToMeetingList(t *testing.T) {
 	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.screen = ScreenEmail
-	m.emailModel = NewEmailModel("Summary", "Body", 80, 24, "pl")
+	m.emailModel = NewEmailModel("Summary", "Body", 80, 24, "pl", "")
 	m.hasEmailModel = true
 
 	updated, _ := appUpdate(t, m, tea.KeyPressMsg{Code: tea.KeyEscape})

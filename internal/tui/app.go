@@ -57,6 +57,9 @@ type AppModel struct {
 	providerModel   ProviderModel
 	settingsModel   SettingsModel
 	settingsModal   ModalModel
+	showLanguage    bool
+	languageModal   ModalModel
+	languageModel   LanguageSelectModel
 
 	hasNewMeetingModel bool
 	hasEditorModel     bool
@@ -181,6 +184,19 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			updatedModel, cmd := m.settingsModal.Update(typedMsg)
 			if updatedModal, ok := updatedModel.(ModalModel); ok {
 				m.settingsModal = updatedModal
+			}
+			cmds = append(cmds, cmd)
+		}
+
+		if m.showLanguage {
+			updatedModel, cmd := m.languageModal.Update(typedMsg)
+			if updatedModal, ok := updatedModel.(ModalModel); ok {
+				m.languageModal = updatedModal
+				if m.languageModal.Content != nil {
+					if lm, ok := m.languageModal.Content.(*LanguageSelectModel); ok {
+						m.languageModel = *lm
+					}
+				}
 			}
 			cmds = append(cmds, cmd)
 		}
@@ -327,7 +343,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case AIEmailDoneMsg:
 		m.aiRunning = false
 		m.statusMsg = "Email generated"
-		m.emailModel = NewEmailModel(typedMsg.Subject, typedMsg.Body, m.width, m.height, m.emailLanguage())
+		m.emailModel = NewEmailModel(typedMsg.Subject, typedMsg.Body, m.width, m.height, m.emailLanguage(), m.version)
 		m.hasEmailModel = true
 		m.screen = ScreenEmail
 		return m, nil
@@ -335,6 +351,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.aiRunning = false
 		m.err = typedMsg.Err
 		m.statusMsg = ""
+		m.emailModel.statusMsg = ""
 		return m, nil
 	case TogglePreviewMsg:
 		return m, nil
@@ -342,12 +359,20 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.cfg != nil {
 			m.cfg.EmailLanguage = typedMsg.Language
 		}
+		m.emailModel.language = typedMsg.Language
+		m.showLanguage = false
 		if m.screen == ScreenEmail && m.structuredMD != "" && m.provider != nil {
 			m.aiRunning = true
 			m.statusMsg = "Regenerating email..."
+			m.emailModel.statusMsg = "Regenerating email..."
 			return m, GenerateEmailCmd(m.provider, m.structuredMD, typedMsg.Language)
 		}
 		return m, nil
+	case ShowLanguageModalMsg:
+		m.languageModel = NewLanguageSelectModel(typedMsg.CurrentLanguage)
+		m.showLanguage = true
+		m.languageModal = NewModalModel("Language", &m.languageModel, m.width, m.height)
+		return m, m.languageModal.Init()
 	case RegenerateEmailMsg:
 		if m.structuredMD == "" || m.provider == nil {
 			return m, nil
@@ -355,6 +380,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.aiRunning = true
 		m.statusMsg = "Generating email..."
+		m.emailModel.statusMsg = "Generating email..."
 		return m, GenerateEmailCmd(m.provider, m.structuredMD, m.emailLanguage())
 	case ProviderSelectedMsg:
 		oldProvider := m.cfg.AIProvider
@@ -465,6 +491,8 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.showProvider = false
 		} else if m.showSettings {
 			m.showSettings = false
+		} else if m.showLanguage {
+			m.showLanguage = false
 		} else if m.showNewMeeting {
 			m.showNewMeeting = false
 		} else if m.showHelp {
@@ -518,6 +546,19 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			updatedModel, cmd := m.settingsModal.Update(msg)
 			if updatedModal, ok := updatedModel.(ModalModel); ok {
 				m.settingsModal = updatedModal
+			}
+			return m, cmd
+		}
+
+		if m.showLanguage {
+			updatedModel, cmd := m.languageModal.Update(typedMsg)
+			if updatedModal, ok := updatedModel.(ModalModel); ok {
+				m.languageModal = updatedModal
+				if m.languageModal.Content != nil {
+					if lm, ok := m.languageModal.Content.(*LanguageSelectModel); ok {
+						m.languageModel = *lm
+					}
+				}
 			}
 			return m, cmd
 		}
@@ -675,6 +716,11 @@ func (m AppModel) View() tea.View {
 		view = RenderOverlay(view, modalView, m.width, m.height)
 	}
 
+	if m.showLanguage {
+		modalView := safeViewContent(func() tea.View { return m.languageModal.View() })
+		view = RenderOverlay(view, modalView, m.width, m.height)
+	}
+
 	if m.showConfirm {
 		modalView := safeViewContent(func() tea.View { return m.confirmModal.View() })
 		view = RenderOverlay(view, modalView, m.width, m.height)
@@ -731,6 +777,19 @@ func (m AppModel) delegateActiveModel(msg tea.Msg) (tea.Model, tea.Cmd) {
 		updated, cmd := m.settingsModal.Update(msg)
 		if modal, ok := updated.(ModalModel); ok {
 			m.settingsModal = modal
+		}
+		return m, cmd
+	}
+
+	if m.showLanguage {
+		updatedModel, cmd := m.languageModal.Update(msg)
+		if updatedModal, ok := updatedModel.(ModalModel); ok {
+			m.languageModal = updatedModal
+			if m.languageModal.Content != nil {
+				if lm, ok := m.languageModal.Content.(*LanguageSelectModel); ok {
+					m.languageModel = *lm
+				}
+			}
 		}
 		return m, cmd
 	}

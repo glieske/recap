@@ -21,7 +21,7 @@ func assertNotPanics(t *testing.T, fn func()) {
 
 func TestEmailAdversarial(t *testing.T) {
 	t.Run("init on zero-dimension model returns nil command", func(t *testing.T) {
-		m := NewEmailModel("subject", "body", 0, 0, "pl")
+		m := NewEmailModel("subject", "body", 0, 0, "pl", "")
 
 		assertNotPanics(t, func() {
 			cmd := m.Init()
@@ -33,7 +33,7 @@ func TestEmailAdversarial(t *testing.T) {
 
 	t.Run("zero dimensions constructor does not panic", func(t *testing.T) {
 		assertNotPanics(t, func() {
-			m := NewEmailModel("subject", "body", 0, 0, "pl")
+			m := NewEmailModel("subject", "body", 0, 0, "pl", "")
 			if m.viewport.Width() != 0 {
 				t.Fatalf("expected width 0, got %d", m.viewport.Width())
 			}
@@ -45,7 +45,7 @@ func TestEmailAdversarial(t *testing.T) {
 
 	t.Run("negative dimensions constructor does not panic", func(t *testing.T) {
 		assertNotPanics(t, func() {
-			m := NewEmailModel("subject", "body", -1, -1, "pl")
+			m := NewEmailModel("subject", "body", -1, -1, "pl", "")
 			if m.viewport.Width() != -1 {
 				t.Fatalf("expected width -1, got %d", m.viewport.Width())
 			}
@@ -59,7 +59,7 @@ func TestEmailAdversarial(t *testing.T) {
 		largeBody := strings.Repeat("A", 100*1024)
 
 		assertNotPanics(t, func() {
-			m := NewEmailModel("large", largeBody, 120, 20, "pl")
+			m := NewEmailModel("large", largeBody, 120, 20, "pl", "")
 			if len(m.body) != 100*1024 {
 				t.Fatalf("expected body length 102400, got %d", len(m.body))
 			}
@@ -75,7 +75,7 @@ func TestEmailAdversarial(t *testing.T) {
 		body := "CJK: 進捗 ✅\nRTL: مرحبا بالعالم\nEmoji: 😀🔥"
 
 		assertNotPanics(t, func() {
-			m := NewEmailModel(subject, body, 120, 20, "pl")
+			m := NewEmailModel(subject, body, 120, 20, "pl", "")
 			view := m.View().Content
 			if !strings.Contains(view, "Subject: "+subject) {
 				t.Fatalf("expected unicode subject to be present in view")
@@ -91,7 +91,7 @@ func TestEmailAdversarial(t *testing.T) {
 		body := "body"
 
 		assertNotPanics(t, func() {
-			m := NewEmailModel(subject, body, 120, 20, "pl")
+			m := NewEmailModel(subject, body, 120, 20, "pl", "")
 			view := m.View().Content
 			if !strings.Contains(view, "Subject: line1") {
 				t.Fatalf("expected first subject line in view")
@@ -106,7 +106,7 @@ func TestEmailAdversarial(t *testing.T) {
 	})
 
 	t.Run("EmailContentMsg with empty subject and non-empty body", func(t *testing.T) {
-		m := NewEmailModel("initial", "initial", 120, 20, "pl")
+		m := NewEmailModel("initial", "initial", 120, 20, "pl", "")
 
 		assertNotPanics(t, func() {
 			updated, _ := m.Update(EmailContentMsg{Subject: "", Body: "body-only"})
@@ -127,7 +127,7 @@ func TestEmailAdversarial(t *testing.T) {
 	})
 
 	t.Run("rapid ClearStatusMsg sequence does not panic", func(t *testing.T) {
-		m := NewEmailModel("subject", "body", 120, 20, "pl")
+		m := NewEmailModel("subject", "body", 120, 20, "pl", "")
 		m.statusMsg = "temporary status"
 
 		assertNotPanics(t, func() {
@@ -146,7 +146,7 @@ func TestEmailAdversarial(t *testing.T) {
 	})
 
 	t.Run("window size update with negative dimensions remains stable", func(t *testing.T) {
-		m := NewEmailModel("subject", "body", 80, 10, "pl")
+		m := NewEmailModel("subject", "body", 80, 10, "pl", "")
 
 		assertNotPanics(t, func() {
 			updated, _ := m.Update(tea.WindowSizeMsg{Width: -50, Height: -9})
