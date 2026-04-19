@@ -70,33 +70,34 @@ func TestHelpModelUpdateUnknownMessagePassesThrough(t *testing.T) {
 }
 
 func TestHelpModelViewContainsSectionHeadersAndBindingsAndTitle(t *testing.T) {
-	m := NewHelpModel()
-	view := m.View().Content
-
-	requiredSubstrings := []string{
-		"Global",
-		"Meeting List",
-		"Editor",
-		"Email",
-		"Ctrl+S",
-		"Ctrl+T",
-		"Ctrl+A",
-		"Ctrl+E",
-		"Ctrl+P",
-		"q / Ctrl+C",
-		"Enter",
-		"n",
-		"f",
-		"t",
-		"d",
-		"Keybindings",
-	}
-
-	for _, sub := range requiredSubstrings {
-		if !strings.Contains(view, sub) {
-			t.Fatalf("expected view to contain %q", sub)
+	// Test each screen separately — help is now context-sensitive.
+	t.Run("editor screen shows editor and split pane sections", func(t *testing.T) {
+		m := HelpModel{screen: ScreenEditor}
+		view := m.View().Content
+		for _, sub := range []string{"Global", "Editor", "Split Pane", "Ctrl+S", "Ctrl+A", "Ctrl+E", "Ctrl+P", "Keybindings"} {
+			if !strings.Contains(view, sub) {
+				t.Fatalf("expected view to contain %q", sub)
+			}
 		}
-	}
+	})
+	t.Run("meeting list screen shows meeting list section", func(t *testing.T) {
+		m := HelpModel{screen: ScreenMeetingList}
+		view := m.View().Content
+		for _, sub := range []string{"Global", "Meeting List", "Enter", "n", "f", "t", "d", "Keybindings"} {
+			if !strings.Contains(view, sub) {
+				t.Fatalf("expected view to contain %q", sub)
+			}
+		}
+	})
+	t.Run("email screen shows email section", func(t *testing.T) {
+		m := HelpModel{screen: ScreenEmail}
+		view := m.View().Content
+		for _, sub := range []string{"Global", "Email", "q / Ctrl+C", "Keybindings"} {
+			if !strings.Contains(view, sub) {
+				t.Fatalf("expected view to contain %q", sub)
+			}
+		}
+	})
 }
 
 func TestHelpModelViewZeroDimensionsReturnsNonEmptyUncenteredBox(t *testing.T) {

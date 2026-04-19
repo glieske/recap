@@ -6,10 +6,10 @@ import (
 )
 
 func TestHelpKeybindings(t *testing.T) {
-	model := NewHelpModel()
-	view := model.View().Content
-
 	t.Run("editor section contains new AI and split bindings", func(t *testing.T) {
+		model := NewHelpModel()
+		model.screen = ScreenEditor
+		view := model.View().Content
 		checks := []string{
 			"Editor",
 			"Toggle split view",
@@ -25,6 +25,9 @@ func TestHelpKeybindings(t *testing.T) {
 	})
 
 	t.Run("split pane section contains documented controls", func(t *testing.T) {
+		model := NewHelpModel()
+		model.screen = ScreenEditor
+		view := model.View().Content
 		checks := []string{
 			"Split Pane",
 			"Tab",
@@ -42,6 +45,9 @@ func TestHelpKeybindings(t *testing.T) {
 	})
 
 	t.Run("email section contains language cycle binding", func(t *testing.T) {
+		model := NewHelpModel()
+		model.screen = ScreenEmail
+		view := model.View().Content
 		checks := []string{
 			"Email",
 			"Cycle email language",
