@@ -17,6 +17,7 @@ install:
 
 test:
 	go test ./... -v -count=1
+	CGO_ENABLED=1 go test -tags gui ./internal/gui/... -v -count=1
 
 lint:
 	go vet ./...
@@ -41,7 +42,8 @@ release:
 	echo "Running lint..."; \
 	go vet ./... || exit 1; \
 	echo "Running tests..."; \
-	go test ./... || exit 1; \
+	go test ./... -count=1 || exit 1; \
+	CGO_ENABLED=1 go test -tags gui ./internal/gui/... -count=1 || exit 1; \
 	git tag "$$VERSION_INPUT"; \
 	echo "Tag $$VERSION_INPUT created."; \
 	read -p "Push tag $$VERSION_INPUT to origin? [y/N] " CONFIRM_PUSH; \
