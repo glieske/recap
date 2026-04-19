@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"testing"
 )
@@ -113,5 +114,26 @@ func TestMainVersionStringUsesRecapNotNotes(t *testing.T) {
 	}
 	if strings.Contains(text, "notes version") {
 		t.Fatalf("did not expect main.go to contain %q", "notes version")
+	}
+}
+
+func TestInitKeepsDevVersionForLocalDevelBuild(t *testing.T) {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		t.Fatalf("expected debug.ReadBuildInfo to succeed in test binary")
+	}
+
+	if info.Main.Version != "(devel)" {
+		t.Skipf("test expects local test build with Main.Version=(devel), got %q", info.Main.Version)
+	}
+
+	if version != "dev" {
+		t.Fatalf("expected package version to remain %q for local (devel) build, got %q", "dev", version)
+	}
+}
+
+func TestInitVersionIsAlwaysNonEmpty(t *testing.T) {
+	if version == "" {
+		t.Fatalf("expected version to be non-empty")
 	}
 }
