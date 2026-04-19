@@ -22,7 +22,7 @@ func requireNoPanic(t *testing.T, name string, fn func()) {
 func TestAdversarial_KeyPressMsg_Malformed_NoPanics(t *testing.T) {
 	malformed := tea.KeyPressMsg(tea.Key{Text: "\x00\u200b😀", Code: 0})
 
-	app := NewAppModel(&config.Config{}, nil, nil, "", false)
+	app := NewAppModel(&config.Config{}, nil, nil, "", false, "")
 	requireNoPanic(t, "AppModel.Update malformed key", func() {
 		updated, _ := app.Update(malformed)
 		typed, ok := updated.(AppModel)
@@ -34,7 +34,7 @@ func TestAdversarial_KeyPressMsg_Malformed_NoPanics(t *testing.T) {
 		}
 	})
 
-	editor := NewEditorModel(nil, nil, 80, 24, "", "")
+	editor := NewEditorModel(nil, nil, 80, 24, "", "", "")
 	requireNoPanic(t, "EditorModel.Update malformed key", func() {
 		updated, _ := editor.Update(malformed)
 		typed, ok := updated.(EditorModel)
@@ -132,7 +132,7 @@ func TestAdversarial_WindowSize_ZeroAndNegative_NoPanics(t *testing.T) {
 	windowMsg := tea.WindowSizeMsg{Width: 0, Height: 0}
 	negativeMsg := tea.WindowSizeMsg{Width: -1, Height: -1}
 
-	app := NewAppModel(&config.Config{}, nil, nil, "", false)
+	app := NewAppModel(&config.Config{}, nil, nil, "", false, "")
 	requireNoPanic(t, "AppModel.Update zero window", func() {
 		updated, _ := app.Update(windowMsg)
 		typed, ok := updated.(AppModel)
@@ -168,7 +168,7 @@ func TestAdversarial_WindowSize_ZeroAndNegative_NoPanics(t *testing.T) {
 		}
 	})
 
-	editor := NewEditorModel(nil, nil, 80, 24, "", "")
+	editor := NewEditorModel(nil, nil, 80, 24, "", "", "")
 	requireNoPanic(t, "EditorModel.Update zero window", func() {
 		updated, _ := editor.Update(windowMsg)
 		typed, ok := updated.(EditorModel)
@@ -197,7 +197,7 @@ func TestAdversarial_ViewComposition_NilLikeChildren_NoPanics(t *testing.T) {
 	// Test View() on properly constructed models at zero-size windows
 	cfg := &config.Config{}
 
-	app := NewAppModel(cfg, nil, nil, "", false)
+	app := NewAppModel(cfg, nil, nil, "", false, "")
 	for _, screen := range []Screen{
 		ScreenMeetingList,
 		ScreenNewMeeting,
@@ -216,7 +216,7 @@ func TestAdversarial_ViewComposition_NilLikeChildren_NoPanics(t *testing.T) {
 			testApp.newMeetingModel = NewNewMeetingModel(nil, 0, 0)
 		case ScreenEditor:
 			testApp.hasEditorModel = true
-			testApp.editorModel = NewEditorModel(nil, nil, 0, 0, "", "")
+			testApp.editorModel = NewEditorModel(nil, nil, 0, 0, "", "", "")
 		case ScreenEmail:
 			testApp.hasEmailModel = true
 			testApp.emailModel = NewEmailModel("", "", 0, 0, "en")
@@ -233,7 +233,7 @@ func TestAdversarial_ViewComposition_NilLikeChildren_NoPanics(t *testing.T) {
 	}
 
 	// Test EditorModel split mode with constructed models at zero size
-	splitEditor := NewEditorModel(nil, nil, 1, 1, "", "")
+	splitEditor := NewEditorModel(nil, nil, 1, 1, "", "", "")
 	splitEditor.splitMode = true
 	splitEditor.hasSummaryModel = true
 	splitEditor.summaryModel = NewSummaryModel("", "", "", nil, 1, 1)
@@ -254,7 +254,7 @@ func TestAdversarial_KeyPressMsg_OversizedInjectionPayload_NoPanics(t *testing.T
 
 	oversized := tea.KeyPressMsg(tea.Key{Text: payload, Code: 0})
 
-	editor := NewEditorModel(nil, nil, 80, 24, "", "")
+	editor := NewEditorModel(nil, nil, 80, 24, "", "", "")
 	requireNoPanic(t, "EditorModel.Update oversized payload", func() {
 		updated, _ := editor.Update(oversized)
 		typed, ok := updated.(EditorModel)
@@ -278,7 +278,7 @@ func TestAdversarial_KeyPressMsg_OversizedInjectionPayload_NoPanics(t *testing.T
 		}
 	})
 
-	app := NewAppModel(&config.Config{}, nil, nil, "", false)
+	app := NewAppModel(&config.Config{}, nil, nil, "", false, "")
 	requireNoPanic(t, "AppModel.Update oversized payload", func() {
 		updated, _ := app.Update(oversized)
 		typed, ok := updated.(AppModel)

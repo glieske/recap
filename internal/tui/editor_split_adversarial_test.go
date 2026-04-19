@@ -8,7 +8,7 @@ import (
 
 func TestSplitAdversarial(t *testing.T) {
 	t.Run("rapid ctrl+p toggling 10x does not corrupt state", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, 120, 24, "", "")
+		m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 		m.SetSummaryModel(NewSummaryModel("summary", "", "", nil, 60, 20))
 
 		for i := 0; i < 10; i++ {
@@ -36,7 +36,7 @@ func TestSplitAdversarial(t *testing.T) {
 	})
 
 	t.Run("WindowSizeMsg width=0 in split mode does not panic", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, 120, 24, "", "")
+		m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 		m.SetSummaryModel(NewSummaryModel("summary", "", "", nil, 60, 20))
 
 		on, _ := m.Update(tea.KeyPressMsg{Code: 'p', Mod: tea.ModCtrl})
@@ -59,7 +59,7 @@ func TestSplitAdversarial(t *testing.T) {
 	})
 
 	t.Run("WindowSizeMsg width=1 in split mode does not panic", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, 120, 24, "", "")
+		m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 		m.SetSummaryModel(NewSummaryModel("summary", "", "", nil, 60, 20))
 
 		on, _ := m.Update(tea.KeyPressMsg{Code: 'p', Mod: tea.ModCtrl})
@@ -76,7 +76,7 @@ func TestSplitAdversarial(t *testing.T) {
 	})
 
 	t.Run("SetSummaryModel multiple times uses last model", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, 120, 24, "", "")
+		m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 		first := NewSummaryModel("first", "", "", nil, 60, 20)
 		second := NewSummaryModel("second", "", "", nil, 60, 20)
 
@@ -96,7 +96,7 @@ func TestSplitAdversarial(t *testing.T) {
 	})
 
 	t.Run("ctrl+p width exactly 99 shows narrow status", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, 99, 24, "", "")
+		m := NewEditorModel(nil, nil, 99, 24, "", "", "")
 		m.SetSummaryModel(NewSummaryModel("summary", "", "", nil, 49, 20))
 
 		updated, cmd := m.Update(tea.KeyPressMsg{Code: 'p', Mod: tea.ModCtrl})
@@ -113,7 +113,7 @@ func TestSplitAdversarial(t *testing.T) {
 	})
 
 	t.Run("ctrl+p width exactly 100 toggles split mode", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, 100, 24, "", "")
+		m := NewEditorModel(nil, nil, 100, 24, "", "", "")
 		m.SetSummaryModel(NewSummaryModel("summary", "", "", nil, 50, 20))
 
 		updated, cmd := m.Update(tea.KeyPressMsg{Code: 'p', Mod: tea.ModCtrl})
@@ -133,7 +133,7 @@ func TestSplitAdversarial(t *testing.T) {
 	})
 
 	t.Run("split remains active when resized below threshold", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, 120, 24, "", "")
+		m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 		m.SetSummaryModel(NewSummaryModel("summary", "", "", nil, 60, 20))
 
 		on, _ := m.Update(tea.KeyPressMsg{Code: 'p', Mod: tea.ModCtrl})

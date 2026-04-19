@@ -29,7 +29,7 @@ func (p appTestProvider) GenerateEmailSummary(context.Context, string, string) (
 func TestAppMeetingCreatedMsgCreatesEditorAndSwitchesScreen(t *testing.T) {
 	store := newTestStore(t)
 	meeting := createProjectAndMeeting(t, store)
-	m := NewAppModel(nil, store, nil, "", false)
+	m := NewAppModel(nil, store, nil, "", false, "")
 
 	updated, cmd := appUpdate(t, m, MeetingCreatedMsg{Meeting: meeting})
 
@@ -51,7 +51,7 @@ func TestAppMeetingCreatedMsgCreatesEditorAndSwitchesScreen(t *testing.T) {
 }
 
 func TestAppAIStructureDoneMsgSetsStructuredState(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.aiRunning = true
 
 	const structuredBody = "# Structured Notes\n- Action 1"
@@ -66,7 +66,7 @@ func TestAppAIStructureDoneMsgSetsStructuredState(t *testing.T) {
 }
 
 func TestAppAIStructureErrMsgStopsAIRunAndSetsStatusError(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.aiRunning = true
 
 	updateErr := errors.New("structure failed")
@@ -87,7 +87,7 @@ func TestAppAIStructureErrMsgStopsAIRunAndSetsStatusError(t *testing.T) {
 }
 
 func TestAppAIEmailDoneMsgSwitchesToEmailWithModel(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.aiRunning = true
 
 	updated, _ := appUpdate(t, m, AIEmailDoneMsg{Subject: "Summary", Body: "Body text"})
@@ -104,7 +104,7 @@ func TestAppAIEmailDoneMsgSwitchesToEmailWithModel(t *testing.T) {
 }
 
 func TestAppAIEmailErrMsgStopsAIRunAndSetsStatusError(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.aiRunning = true
 
 	updateErr := errors.New("email generation failed")
@@ -127,8 +127,8 @@ func TestAppAIEmailErrMsgStopsAIRunAndSetsStatusError(t *testing.T) {
 func TestAppSaveDoneMsgClearsEditorErrorState(t *testing.T) {
 	store := newTestStore(t)
 	meeting := createProjectAndMeeting(t, store)
-	m := NewAppModel(nil, store, nil, "", false)
-	m.editorModel = NewEditorModel(meeting, store, 80, 24, "", "")
+	m := NewAppModel(nil, store, nil, "", false, "")
+	m.editorModel = NewEditorModel(meeting, store, 80, 24, "", "", "")
 	m.hasEditorModel = true
 
 	initialSaveErr := errors.New("save failed once")
@@ -149,8 +149,8 @@ func TestAppSaveDoneMsgClearsEditorErrorState(t *testing.T) {
 func TestAppSaveErrMsgSetsEditorErrorStatus(t *testing.T) {
 	store := newTestStore(t)
 	meeting := createProjectAndMeeting(t, store)
-	m := NewAppModel(nil, store, nil, "", false)
-	m.editorModel = NewEditorModel(meeting, store, 80, 24, "", "")
+	m := NewAppModel(nil, store, nil, "", false, "")
+	m.editorModel = NewEditorModel(meeting, store, 80, 24, "", "", "")
 	m.hasEditorModel = true
 
 	saveErr := errors.New("disk full")
@@ -172,7 +172,7 @@ func TestAppRegenerateEmailMsgStartsAIWhenConfigured(t *testing.T) {
 	meeting := createProjectAndMeeting(t, store)
 	provider := appTestProvider{emailResponse: "Subject: Follow-up\n\nThanks"}
 
-	m := NewAppModel(nil, store, provider, "", false)
+	m := NewAppModel(nil, store, provider, "", false, "")
 	m.screen = ScreenEmail
 	m.currentMeeting = meeting
 	m.structuredMD = "# Structured"
@@ -194,7 +194,7 @@ func TestAppRegenerateEmailMsgStartsAIWhenConfigured(t *testing.T) {
 
 func TestAppEscFromNewMeetingReturnsToMeetingList(t *testing.T) {
 	store := newTestStore(t)
-	m := NewAppModel(nil, store, nil, "", false)
+	m := NewAppModel(nil, store, nil, "", false, "")
 	m.screen = ScreenMeetingList
 
 	// Open new-meeting as overlay
@@ -226,7 +226,7 @@ func TestAppEscFromNewMeetingReturnsToMeetingList(t *testing.T) {
 }
 
 func TestAppEscFromEmailReturnsToMeetingList(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.screen = ScreenEmail
 	m.emailModel = NewEmailModel("Summary", "Body", 80, 24, "pl")
 	m.hasEmailModel = true
@@ -239,7 +239,7 @@ func TestAppEscFromEmailReturnsToMeetingList(t *testing.T) {
 }
 
 func TestAutoNewMeeting_InitEmitsNavigateMsg(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", true)
+	m := NewAppModel(nil, nil, nil, "", true, "")
 
 	cmd := m.Init()
 	if cmd == nil {
@@ -282,7 +282,7 @@ func TestAutoNewMeeting_InitEmitsNavigateMsg(t *testing.T) {
 }
 
 func TestAutoNewMeeting_FalseDoesNotTrigger(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 
 	updatedModel, _ := m.Update(NavigateMsg{Screen: ScreenMeetingList})
 	updated, ok := updatedModel.(AppModel)

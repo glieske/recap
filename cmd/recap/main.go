@@ -50,7 +50,7 @@ func main() {
 		provider = nil
 	}
 
-	app := tui.NewAppModel(cfg, store, provider, configPath, autoNew)
+	app := tui.NewAppModel(cfg, store, provider, configPath, autoNew, version)
 	p := tea.NewProgram(app)
 
 	if _, err := p.Run(); err != nil {

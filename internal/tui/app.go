@@ -38,6 +38,7 @@ type AppModel struct {
 	cfg             *config.Config
 	configPath      string
 	autoNewMeeting  bool
+	version         string
 	err             error
 
 	listModel       ListModel
@@ -75,7 +76,7 @@ type AppModel struct {
 	statusMsg      string
 }
 
-func NewAppModel(cfg *config.Config, store *storage.Store, provider ai.Provider, configPath string, autoNewMeeting bool) AppModel {
+func NewAppModel(cfg *config.Config, store *storage.Store, provider ai.Provider, configPath string, autoNewMeeting bool, version string) AppModel {
 	return AppModel{
 		screen:          ScreenWelcome,
 		previousScreen:  ScreenWelcome,
@@ -87,8 +88,9 @@ func NewAppModel(cfg *config.Config, store *storage.Store, provider ai.Provider,
 		cfg:             cfg,
 		configPath:      configPath,
 		autoNewMeeting:  autoNewMeeting,
+		version:         version,
 		listModel:       NewListModel(store, 80, 24),
-		welcomeModel:    NewWelcomeModel(80, 24),
+		welcomeModel:    NewWelcomeModel(80, 24, version),
 		helpModel:       NewHelpModel(),
 	}
 }
@@ -205,7 +207,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		meeting := typedMsg.Meeting
 		m.currentMeeting = &meeting
 		provName, provModel := m.providerDisplayInfo()
-		m.editorModel = NewEditorModel(m.currentMeeting, m.store, m.width, m.height, provName, provModel)
+		m.editorModel = NewEditorModel(m.currentMeeting, m.store, m.width, m.height, provName, provModel, m.version)
 		m.hasEditorModel = true
 
 		m.structuredMD = ""
@@ -233,7 +235,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		meeting := *typedMsg.Meeting
 		m.currentMeeting = &meeting
 		provName, provModel := m.providerDisplayInfo()
-		m.editorModel = NewEditorModel(m.currentMeeting, m.store, m.width, m.height, provName, provModel)
+		m.editorModel = NewEditorModel(m.currentMeeting, m.store, m.width, m.height, provName, provModel, m.version)
 		m.hasEditorModel = true
 
 		m.structuredMD = ""

@@ -39,7 +39,7 @@ func (adversarialProvider) GenerateEmailSummary(context.Context, string, string)
 }
 
 func TestAppAdversarialNilStore(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 
 	for _, screen := range []Screen{
 		ScreenMeetingList,
@@ -81,7 +81,7 @@ func TestAppAdversarialNilStore(t *testing.T) {
 }
 
 func TestAppAdversarialRapidScreenSwitching(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 
 	sequence := []Screen{
 		ScreenMeetingList,
@@ -106,7 +106,7 @@ func TestAppAdversarialRapidScreenSwitching(t *testing.T) {
 }
 
 func TestAppAdversarialAIMsgWithNoEditor(t *testing.T) {
-	m := NewAppModel(nil, nil, adversarialProvider{}, "", false)
+	m := NewAppModel(nil, nil, adversarialProvider{}, "", false, "")
 	m.currentMeeting = &storage.Meeting{Title: "meeting"}
 	m.hasEditorModel = false
 
@@ -120,7 +120,7 @@ func TestAppAdversarialAIMsgWithNoEditor(t *testing.T) {
 }
 
 func TestAppAdversarialAIMsgWithNoProvider(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.currentMeeting = &storage.Meeting{Title: "meeting"}
 	m.hasEditorModel = true
 
@@ -134,7 +134,7 @@ func TestAppAdversarialAIMsgWithNoProvider(t *testing.T) {
 }
 
 func TestAppAdversarialMeetingCreatedNilMeeting(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 
 	updated, cmd := updateAppNoPanic(t, m, MeetingCreatedMsg{Meeting: nil})
 	if cmd != nil {
@@ -146,7 +146,7 @@ func TestAppAdversarialMeetingCreatedNilMeeting(t *testing.T) {
 }
 
 func TestAppAdversarialZeroSizeWindow(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 
 	updated, _ := updateAppNoPanic(t, m, tea.WindowSizeMsg{Width: 0, Height: 0})
 	if updated.width != 0 || updated.height != 0 {
@@ -155,7 +155,7 @@ func TestAppAdversarialZeroSizeWindow(t *testing.T) {
 }
 
 func TestAppAdversarialNegativeSizeWindow(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 
 	updated, _ := updateAppNoPanic(t, m, tea.WindowSizeMsg{Width: -1, Height: -1})
 	if updated.width != -1 || updated.height != -1 {
@@ -164,7 +164,7 @@ func TestAppAdversarialNegativeSizeWindow(t *testing.T) {
 }
 
 func TestAppAdversarialTogglePreviewWithNoEditor(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.screen = ScreenMeetingList
 
 	updated, cmd := updateAppNoPanic(t, m, TogglePreviewMsg{})

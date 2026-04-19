@@ -9,7 +9,7 @@ import (
 )
 
 func TestSplitSetGetSummaryModelAndSplitFlag(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 	if m.IsSplitMode() {
 		t.Fatalf("expected split mode false by default")
 	}
@@ -24,7 +24,7 @@ func TestSplitSetGetSummaryModelAndSplitFlag(t *testing.T) {
 }
 
 func TestSplitCtrlPWithoutSummaryEmitsTogglePreviewMsg(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 
 	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'p', Mod: tea.ModCtrl})
 	updatedModel, ok := updated.(EditorModel)
@@ -45,7 +45,7 @@ func TestSplitCtrlPWithoutSummaryEmitsTogglePreviewMsg(t *testing.T) {
 }
 
 func TestSplitCtrlPWithSummaryTooNarrowSetsStatusAndDoesNotToggle(t *testing.T) {
-	m := NewEditorModel(nil, nil, 99, 24, "", "")
+	m := NewEditorModel(nil, nil, 99, 24, "", "", "")
 	sm := NewSummaryModel("summary", "", "", nil, 49, 20)
 	m.SetSummaryModel(sm)
 
@@ -70,7 +70,7 @@ func TestSplitCtrlPWithSummaryTooNarrowSetsStatusAndDoesNotToggle(t *testing.T) 
 }
 
 func TestSplitCtrlPWithSummaryWideTogglesOnAndSetsPaneWidths(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 	sm := NewSummaryModel("summary", "", "", nil, 60, 20)
 	m.SetSummaryModel(sm)
 
@@ -99,7 +99,7 @@ func TestSplitCtrlPWithSummaryWideTogglesOnAndSetsPaneWidths(t *testing.T) {
 }
 
 func TestSplitCtrlPToggleOffRestoresFullTextareaWidth(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 	sm := NewSummaryModel("summary", "", "", nil, 60, 20)
 	m.SetSummaryModel(sm)
 
@@ -124,7 +124,7 @@ func TestSplitCtrlPToggleOffRestoresFullTextareaWidth(t *testing.T) {
 }
 
 func TestSplitViewInSplitModeContainsVerticalDivider(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 	m.textarea.SetValue("left pane text")
 	sm := NewSummaryModel("right pane text", "", "", nil, 60, 20)
 	m.SetSummaryModel(sm)
@@ -145,7 +145,7 @@ func TestSplitViewInSplitModeContainsVerticalDivider(t *testing.T) {
 }
 
 func TestSplitViewWithoutSplitModeShowsNormalEditorLayout(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 	m.textarea.SetValue("normal editor body")
 
 	view := m.View().Content
@@ -162,7 +162,7 @@ func TestSplitViewWithoutSplitModeShowsNormalEditorLayout(t *testing.T) {
 }
 
 func TestSplitWindowSizeMsgRecalculatesPaneWidthsInSplitMode(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 	sm := NewSummaryModel("summary", "", "", nil, 60, 20)
 	m.SetSummaryModel(sm)
 

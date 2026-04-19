@@ -7,7 +7,7 @@ import (
 )
 
 func TestLegendNormalModeShowsDefaultBindings(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 
 	legend := m.renderLegend()
 
@@ -17,7 +17,7 @@ func TestLegendNormalModeShowsDefaultBindings(t *testing.T) {
 }
 
 func TestLegendSplitModeLeftPaneShowsEditorBindings(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 	m.splitMode = true
 	m.focusedPane = 0
 
@@ -29,7 +29,7 @@ func TestLegendSplitModeLeftPaneShowsEditorBindings(t *testing.T) {
 }
 
 func TestLegendSplitModeRightPaneShowsSummaryBindings(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 	m.splitMode = true
 	m.focusedPane = 1
 
@@ -41,7 +41,7 @@ func TestLegendSplitModeRightPaneShowsSummaryBindings(t *testing.T) {
 }
 
 func TestLegendTruncatesWithEllipsisWhenWidthIsNarrow(t *testing.T) {
-	m := NewEditorModel(nil, nil, 12, 24, "", "")
+	m := NewEditorModel(nil, nil, 12, 24, "", "", "")
 
 	legend := m.renderLegend()
 
@@ -54,7 +54,7 @@ func TestLegendTruncatesWithEllipsisWhenWidthIsNarrow(t *testing.T) {
 }
 
 func TestLegendWidthOneRendersOnlyEllipsis(t *testing.T) {
-	m := NewEditorModel(nil, nil, 1, 24, "", "")
+	m := NewEditorModel(nil, nil, 1, 24, "", "", "")
 
 	legend := m.renderLegend()
 

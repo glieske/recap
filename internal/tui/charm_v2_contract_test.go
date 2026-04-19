@@ -45,10 +45,10 @@ func TestCharmV2_ViewMethodsReturnTeaView(t *testing.T) {
 	want := reflect.TypeOf(tea.View{})
 
 	views := []tea.View{
-		NewAppModel(&config.Config{}, nil, nil, "", false).View(),
+		NewAppModel(&config.Config{}, nil, nil, "", false, "").View(),
 		NewListModel(nil, 80, 24).View(),
 		NewNewMeetingModel(nil, 80, 24).View(),
-		NewEditorModel(nil, nil, 80, 24, "", "").View(),
+		NewEditorModel(nil, nil, 80, 24, "", "", "").View(),
 		NewEmailModel("subject", "body", 80, 24, "en").View(),
 		NewHelpModel().View(),
 		NewProviderModel("", 80, 24).View(),
@@ -64,7 +64,7 @@ func TestCharmV2_ViewMethodsReturnTeaView(t *testing.T) {
 }
 
 func TestCharmV2_AppViewEnablesAltScreen(t *testing.T) {
-	m := NewAppModel(&config.Config{}, nil, nil, "", false)
+	m := NewAppModel(&config.Config{}, nil, nil, "", false, "")
 	v := m.View()
 
 	if v.AltScreen != true {
@@ -73,7 +73,7 @@ func TestCharmV2_AppViewEnablesAltScreen(t *testing.T) {
 }
 
 func TestCharmV2_AppUpdateAcceptsKeyPressMsg(t *testing.T) {
-	m := NewAppModel(&config.Config{}, nil, nil, "", false)
+	m := NewAppModel(&config.Config{}, nil, nil, "", false, "")
 
 	updated, _ := m.Update(keyRune('?'))
 	app := appFromModel(t, updated)
@@ -84,7 +84,7 @@ func TestCharmV2_AppUpdateAcceptsKeyPressMsg(t *testing.T) {
 		t.Fatalf("screen mismatch after '?': got %v want %v", app.screen, ScreenWelcome)
 	}
 
-	m2 := NewAppModel(&config.Config{}, nil, nil, "", false)
+	m2 := NewAppModel(&config.Config{}, nil, nil, "", false, "")
 	updated, cmd := m2.Update(keyRune('q'))
 	_ = appFromModel(t, updated)
 	if cmd == nil {
@@ -122,7 +122,7 @@ func TestCharmV2_ViewportAndTextareaResizeViaSetters(t *testing.T) {
 		t.Fatalf("preview viewport height mismatch: got %d want %d", got, want)
 	}
 
-	editor := NewEditorModel(nil, nil, 80, 24, "", "")
+	editor := NewEditorModel(nil, nil, 80, 24, "", "", "")
 	updatedEditorModel, _ := editor.Update(tea.WindowSizeMsg{Width: 96, Height: 31})
 	updatedEditor, ok := updatedEditorModel.(EditorModel)
 	if !ok {
@@ -350,7 +350,7 @@ func TestCharmV2_SummaryMethodsAndErrorPaths(t *testing.T) {
 }
 
 func TestCharmV2_AdditionalPublicAPIContracts(t *testing.T) {
-	if got := NewAppModel(&config.Config{}, nil, nil, "", false).Init(); got != nil {
+	if got := NewAppModel(&config.Config{}, nil, nil, "", false, "").Init(); got != nil {
 		t.Fatalf("AppModel.Init mismatch: got %v want nil", got)
 	}
 
@@ -424,7 +424,7 @@ func TestCharmV2_AdditionalPublicAPIContracts(t *testing.T) {
 		t.Fatalf("PreviewModel.View content mismatch: got %q", preview.View().Content)
 	}
 
-	editor := NewEditorModel(nil, nil, 80, 24, "GitHub Models", "gpt")
+	editor := NewEditorModel(nil, nil, 80, 24, "GitHub Models", "gpt", "")
 	if got := editor.Init(); got == nil {
 		t.Fatal("EditorModel.Init expected non-nil batch command")
 	}

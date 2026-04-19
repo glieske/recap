@@ -17,6 +17,7 @@ type WelcomeModel struct {
 	height  int
 	cursor  int
 	choices []welcomeChoice
+	version string
 }
 
 type welcomeChoice struct {
@@ -24,10 +25,15 @@ type welcomeChoice struct {
 	key   string
 }
 
-func NewWelcomeModel(width, height int) WelcomeModel {
+func NewWelcomeModel(width, height int, version string) WelcomeModel {
+	if version == "" {
+		version = "dev"
+	}
+
 	return WelcomeModel{
-		width:  width,
-		height: height,
+		width:   width,
+		height:  height,
+		version: version,
 		choices: []welcomeChoice{
 			{label: "📋 Explore Notes", key: "notes"},
 			{label: "✏️  New Meeting", key: "new"},
@@ -95,6 +101,13 @@ func (m WelcomeModel) View() tea.View {
 	b.WriteString(titleStyle.Render(recapLogo))
 	b.WriteString("\n")
 	b.WriteString(subtitleStyle.Render("  Meeting notes with AI-powered structuring"))
+	b.WriteString("\n")
+
+	versionLine := "  v" + m.version
+	if strings.HasPrefix(m.version, "v") {
+		versionLine = "  " + m.version
+	}
+	b.WriteString(subtitleStyle.Render(versionLine))
 	b.WriteString("\n\n")
 
 	// Menu

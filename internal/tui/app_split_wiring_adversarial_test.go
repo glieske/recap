@@ -23,7 +23,7 @@ func appUpdateNoPanic(t *testing.T, m AppModel, msg tea.Msg) (AppModel, tea.Cmd)
 
 func TestAppSplitWiringAdversarial(t *testing.T) {
 	t.Run("AIStructureDoneMsg with no editor does not panic", func(t *testing.T) {
-		m := NewAppModel(nil, nil, nil, "", false)
+		m := NewAppModel(nil, nil, nil, "", false, "")
 
 		updated, cmd := appUpdateNoPanic(t, m, AIStructureDoneMsg{StructuredMD: "# generated"})
 
@@ -44,7 +44,7 @@ func TestAppSplitWiringAdversarial(t *testing.T) {
 	t.Run("AIStructureDoneMsg with empty StructuredMD updates summary to empty", func(t *testing.T) {
 		store := newTestStore(t)
 		meeting := createProjectAndMeeting(t, store)
-		m := NewAppModel(nil, store, nil, "", false)
+		m := NewAppModel(nil, store, nil, "", false, "")
 
 		updated, _ := appUpdateNoPanic(t, m, MeetingSelectedMsg{Meeting: *meeting})
 		updated, cmd := appUpdateNoPanic(t, updated, AIStructureDoneMsg{StructuredMD: ""})
@@ -68,7 +68,7 @@ func TestAppSplitWiringAdversarial(t *testing.T) {
 		screens := []Screen{ScreenMeetingList, ScreenEmail, ScreenHelp, ScreenNewMeeting, ScreenProviderSelector}
 
 		for _, screen := range screens {
-			m := NewAppModel(nil, nil, nil, "", false)
+			m := NewAppModel(nil, nil, nil, "", false, "")
 			m.screen = screen
 
 			updated, cmd := appUpdateNoPanic(t, m, TogglePreviewMsg{})
@@ -83,7 +83,7 @@ func TestAppSplitWiringAdversarial(t *testing.T) {
 	})
 
 	t.Run("MeetingSelectedMsg with nil store still wires SummaryModel", func(t *testing.T) {
-		m := NewAppModel(nil, nil, nil, "", false)
+		m := NewAppModel(nil, nil, nil, "", false, "")
 		meeting := storage.Meeting{ID: "meeting-nil-store", Project: "INFRA", Title: "Nil store"}
 
 		updated, _ := appUpdateNoPanic(t, m, MeetingSelectedMsg{Meeting: meeting})
@@ -121,7 +121,7 @@ func TestAppSplitWiringAdversarial(t *testing.T) {
 			t.Fatalf("CreateMeeting for meetingB failed: %v", err)
 		}
 
-		m := NewAppModel(nil, store, nil, "", false)
+		m := NewAppModel(nil, store, nil, "", false, "")
 		updated, _ := appUpdateNoPanic(t, m, MeetingSelectedMsg{Meeting: *meetingA})
 		updated, _ = appUpdateNoPanic(t, updated, MeetingSelectedMsg{Meeting: *meetingB})
 
@@ -161,7 +161,7 @@ func TestAppSplitWiringAdversarial(t *testing.T) {
 			t.Fatalf("CreateMeeting for meetingB failed: %v", err)
 		}
 
-		m := NewAppModel(nil, store, nil, "", false)
+		m := NewAppModel(nil, store, nil, "", false, "")
 		updated, _ := appUpdateNoPanic(t, m, MeetingSelectedMsg{Meeting: *meetingA})
 
 		const oldAIResult = "# Meeting A structured"

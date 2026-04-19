@@ -10,7 +10,7 @@ import (
 
 func TestLegendAdversarial(t *testing.T) {
 	t.Run("zero width does not panic", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, 120, 24, "", "")
+		m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 		m.width = 0
 
 		legend := mustRenderLegendNoPanic(t, m)
@@ -23,7 +23,7 @@ func TestLegendAdversarial(t *testing.T) {
 	})
 
 	t.Run("negative width does not panic", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, 120, 24, "", "")
+		m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 		m.width = -5
 
 		legend := mustRenderLegendNoPanic(t, m)
@@ -36,7 +36,7 @@ func TestLegendAdversarial(t *testing.T) {
 	})
 
 	t.Run("width one renders exactly ellipsis", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, 1, 24, "", "")
+		m := NewEditorModel(nil, nil, 1, 24, "", "", "")
 
 		legend := mustRenderLegendNoPanic(t, m)
 		if ansi.Strip(legend) != "…" {
@@ -45,7 +45,7 @@ func TestLegendAdversarial(t *testing.T) {
 	})
 
 	t.Run("width two truncates to one rune plus ellipsis", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, 2, 24, "", "")
+		m := NewEditorModel(nil, nil, 2, 24, "", "", "")
 
 		legend := mustRenderLegendNoPanic(t, m)
 		if ansi.Strip(legend) != "c…" {
@@ -57,7 +57,7 @@ func TestLegendAdversarial(t *testing.T) {
 	})
 
 	t.Run("focused pane out of range in split mode does not panic", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, 120, 24, "", "")
+		m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 		m.splitMode = true
 		m.focusedPane = 99
 
@@ -75,7 +75,7 @@ func TestLegendAdversarial(t *testing.T) {
 	})
 
 	t.Run("rapid split and focus toggling always renders valid legend", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, 120, 24, "", "")
+		m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 		focusValues := []int{-1, 0, 1, 2, 99}
 		widthValues := []int{120, 2, 1, 0, -5}
 

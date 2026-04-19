@@ -42,7 +42,7 @@ func updateEditorModelForTest(t *testing.T, m EditorModel, msg tea.Msg) (EditorM
 }
 
 func TestEditorNewEditorModelNilInputs(t *testing.T) {
-	m := NewEditorModel(nil, nil, 80, 20, "", "")
+	m := NewEditorModel(nil, nil, 80, 20, "", "", "")
 
 	if m.meeting != nil {
 		t.Fatalf("expected meeting=nil")
@@ -64,12 +64,12 @@ func TestEditorNewEditorModelNilInputs(t *testing.T) {
 func TestEditorNewEditorModelNilMeetingOrStore(t *testing.T) {
 	store, meeting := createEditorTestStoreAndMeeting(t)
 
-	withNilMeeting := NewEditorModel(nil, store, 70, 10, "", "")
+	withNilMeeting := NewEditorModel(nil, store, 70, 10, "", "", "")
 	if withNilMeeting.meeting != nil {
 		t.Fatalf("expected nil meeting when input meeting is nil")
 	}
 
-	withNilStore := NewEditorModel(meeting, nil, 70, 10, "", "")
+	withNilStore := NewEditorModel(meeting, nil, 70, 10, "", "", "")
 	if withNilStore.store != nil {
 		t.Fatalf("expected nil store when input store is nil")
 	}
@@ -81,7 +81,7 @@ func TestEditorNewEditorModelLoadsExistingRawNotes(t *testing.T) {
 		t.Fatalf("SaveRawNotes: %v", err)
 	}
 
-	m := NewEditorModel(meeting, store, 80, 20, "", "")
+	m := NewEditorModel(meeting, store, 80, 20, "", "", "")
 
 	if got := m.textarea.Value(); got != "existing raw notes" {
 		t.Fatalf("expected textarea value %q, got %q", "existing raw notes", got)
@@ -89,7 +89,7 @@ func TestEditorNewEditorModelLoadsExistingRawNotes(t *testing.T) {
 }
 
 func TestEditorInitReturnsNonNilCommand(t *testing.T) {
-	m := NewEditorModel(nil, nil, 80, 20, "", "")
+	m := NewEditorModel(nil, nil, 80, 20, "", "", "")
 
 	if cmd := m.Init(); cmd == nil {
 		t.Fatalf("expected non-nil init command")
@@ -97,7 +97,7 @@ func TestEditorInitReturnsNonNilCommand(t *testing.T) {
 }
 
 func TestEditorUpdateWindowSizeMsgResizesEditor(t *testing.T) {
-	m := NewEditorModel(nil, nil, 40, 8, "", "")
+	m := NewEditorModel(nil, nil, 40, 8, "", "", "")
 
 	updated, cmd := updateEditorModelForTest(t, m, tea.WindowSizeMsg{Width: 120, Height: 42})
 	if cmd != nil {
@@ -110,7 +110,7 @@ func TestEditorUpdateWindowSizeMsgResizesEditor(t *testing.T) {
 }
 
 func TestEditorUpdateCtrlTInsertsTimestampAndMarksDirty(t *testing.T) {
-	m := NewEditorModel(nil, nil, 80, 20, "", "")
+	m := NewEditorModel(nil, nil, 80, 20, "", "", "")
 
 	updated, cmd := updateEditorModelForTest(t, m, tea.KeyPressMsg{Code: 't', Mod: tea.ModCtrl})
 	if cmd != nil {
@@ -129,7 +129,7 @@ func TestEditorUpdateCtrlTInsertsTimestampAndMarksDirty(t *testing.T) {
 
 func TestEditorUpdateCtrlSReturnsSaveCmdAndClearsDirty(t *testing.T) {
 	store, meeting := createEditorTestStoreAndMeeting(t)
-	m := NewEditorModel(meeting, store, 80, 20, "", "")
+	m := NewEditorModel(meeting, store, 80, 20, "", "", "")
 	m.textarea.SetValue("save this")
 	m.dirty = true
 
@@ -161,7 +161,7 @@ func TestEditorUpdateCtrlAEMessagesAndTogglePreview(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			m := NewEditorModel(nil, nil, 80, 20, "", "")
+			m := NewEditorModel(nil, nil, 80, 20, "", "", "")
 			updated, cmd := updateEditorModelForTest(t, m, tc.msg)
 			if cmd == nil {
 				t.Fatalf("expected non-nil command for %s", tc.name)
@@ -194,7 +194,7 @@ func TestEditorUpdateAutoSaveTickDirtyAndCleanBranches(t *testing.T) {
 	store, meeting := createEditorTestStoreAndMeeting(t)
 
 	t.Run("dirty triggers save path", func(t *testing.T) {
-		m := NewEditorModel(meeting, store, 80, 20, "", "")
+		m := NewEditorModel(meeting, store, 80, 20, "", "", "")
 		m.textarea.SetValue("autosave content")
 		m.dirty = true
 
@@ -209,7 +209,7 @@ func TestEditorUpdateAutoSaveTickDirtyAndCleanBranches(t *testing.T) {
 	})
 
 	t.Run("clean skips save and schedules next tick", func(t *testing.T) {
-		m := NewEditorModel(meeting, store, 80, 20, "", "")
+		m := NewEditorModel(meeting, store, 80, 20, "", "", "")
 		m.dirty = false
 
 		updated, cmd := updateEditorModelForTest(t, m, AutoSaveTickMsg{})
@@ -224,7 +224,7 @@ func TestEditorUpdateAutoSaveTickDirtyAndCleanBranches(t *testing.T) {
 }
 
 func TestEditorUpdateSaveDoneMsgSetsStatusAndLastSaved(t *testing.T) {
-	m := NewEditorModel(nil, nil, 80, 20, "", "")
+	m := NewEditorModel(nil, nil, 80, 20, "", "", "")
 	before := m.lastSaved
 
 	updated, cmd := updateEditorModelForTest(t, m, SaveDoneMsg{})
@@ -246,7 +246,7 @@ func TestEditorUpdateSaveDoneMsgSetsStatusAndLastSaved(t *testing.T) {
 }
 
 func TestEditorUpdateSaveErrMsgSetsErrorAndDirty(t *testing.T) {
-	m := NewEditorModel(nil, nil, 80, 20, "", "")
+	m := NewEditorModel(nil, nil, 80, 20, "", "", "")
 	m.dirty = false
 
 	errMsg := SaveErrMsg{Err: errors.New("disk full")}
@@ -270,7 +270,7 @@ func TestEditorUpdateSaveErrMsgSetsErrorAndDirty(t *testing.T) {
 }
 
 func TestEditorSaveCmdNilStoreOrMeetingReturnsSaveErrMsg(t *testing.T) {
-	m := NewEditorModel(nil, nil, 80, 20, "", "")
+	m := NewEditorModel(nil, nil, 80, 20, "", "", "")
 	msg := m.saveCmd()()
 	errMsg, ok := msg.(SaveErrMsg)
 	if !ok {
@@ -284,7 +284,7 @@ func TestEditorSaveCmdNilStoreOrMeetingReturnsSaveErrMsg(t *testing.T) {
 
 func TestEditorSaveCmdValidStoreSavesRawNotesAndReturnsDone(t *testing.T) {
 	store, meeting := createEditorTestStoreAndMeeting(t)
-	m := NewEditorModel(meeting, store, 80, 20, "", "")
+	m := NewEditorModel(meeting, store, 80, 20, "", "", "")
 	m.textarea.SetValue("persisted text")
 
 	msg := m.saveCmd()()
@@ -304,7 +304,7 @@ func TestEditorSaveCmdValidStoreSavesRawNotesAndReturnsDone(t *testing.T) {
 
 func TestEditorViewContainsTextareaAndStatusBar(t *testing.T) {
 	store, meeting := createEditorTestStoreAndMeeting(t)
-	m := NewEditorModel(meeting, store, 80, 20, "", "")
+	m := NewEditorModel(meeting, store, 80, 20, "", "", "")
 	m.textarea.SetValue("editor body")
 	m.statusMsg = "Saved"
 	m.statusExpiry = time.Now().Add(2 * time.Second)
@@ -324,7 +324,7 @@ func TestEditorViewContainsTextareaAndStatusBar(t *testing.T) {
 }
 
 func TestEditorRenderStatusBarShowsDirtyAndCharCount(t *testing.T) {
-	m := NewEditorModel(nil, nil, 40, 10, "", "")
+	m := NewEditorModel(nil, nil, 40, 10, "", "", "")
 	m.textarea.SetValue("abcd")
 	m.dirty = true
 
@@ -373,7 +373,7 @@ func TestRenderStatusBarStylingBoldAndHighContrast(t *testing.T) {
 }
 
 func TestEditorRenderStatusBarProviderDisplayEmpty(t *testing.T) {
-	m := NewEditorModel(nil, nil, 80, 10, "", "")
+	m := NewEditorModel(nil, nil, 80, 10, "", "", "")
 	m.textarea.SetValue("abcd")
 	m.dirty = true
 
@@ -392,7 +392,7 @@ func TestEditorRenderStatusBarProviderDisplayEmpty(t *testing.T) {
 }
 
 func TestEditorRenderStatusBarProviderDisplayNameOnly(t *testing.T) {
-	m := NewEditorModel(nil, nil, 90, 10, "GitHub Models", "")
+	m := NewEditorModel(nil, nil, 90, 10, "GitHub Models", "", "")
 	m.textarea.SetValue("abcde")
 	m.dirty = true
 
@@ -407,7 +407,7 @@ func TestEditorRenderStatusBarProviderDisplayNameOnly(t *testing.T) {
 }
 
 func TestEditorRenderStatusBarProviderDisplayNameAndModel(t *testing.T) {
-	m := NewEditorModel(nil, nil, 110, 10, "OpenAI", "gpt-4.1")
+	m := NewEditorModel(nil, nil, 110, 10, "OpenAI", "gpt-4.1", "")
 	m.textarea.SetValue("abcdef")
 	m.dirty = true
 
@@ -476,7 +476,7 @@ func TestMaxEditorHeight(t *testing.T) {
 }
 
 func TestEditorLegendRenderNormalWidthContainsShortcuts(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 20, "", "")
+	m := NewEditorModel(nil, nil, 120, 20, "", "", "")
 
 	legend := m.renderLegend()
 	if !strings.Contains(legend, "ctrl+s") {
@@ -489,7 +489,7 @@ func TestEditorLegendRenderNormalWidthContainsShortcuts(t *testing.T) {
 }
 
 func TestEditorLegendRenderNarrowWidthTruncatesWithEllipsis(t *testing.T) {
-	m := NewEditorModel(nil, nil, 20, 20, "", "")
+	m := NewEditorModel(nil, nil, 20, 20, "", "", "")
 
 	legend := m.renderLegend()
 	if len([]rune(ansi.Strip(legend))) != 20 {
@@ -502,7 +502,7 @@ func TestEditorLegendRenderNarrowWidthTruncatesWithEllipsis(t *testing.T) {
 }
 
 func TestEditorLegendRenderWidthOneReturnsOnlyEllipsis(t *testing.T) {
-	m := NewEditorModel(nil, nil, 1, 20, "", "")
+	m := NewEditorModel(nil, nil, 1, 20, "", "", "")
 
 	legend := m.renderLegend()
 	if ansi.Strip(legend) != "…" {
@@ -511,7 +511,7 @@ func TestEditorLegendRenderWidthOneReturnsOnlyEllipsis(t *testing.T) {
 }
 
 func TestEditorLegendRenderWidthGuardBelowOneUsesOne(t *testing.T) {
-	m := NewEditorModel(nil, nil, 0, 20, "", "")
+	m := NewEditorModel(nil, nil, 0, 20, "", "", "")
 
 	legend := m.renderLegend()
 	if ansi.Strip(legend) != "…" {
@@ -536,7 +536,7 @@ func TestEditorLegendMaxEditorHeightSmallHeightsClampToOne(t *testing.T) {
 }
 
 func TestEditorLegendViewContainsLegendText(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 20, "", "")
+	m := NewEditorModel(nil, nil, 120, 20, "", "", "")
 	m.textarea.SetValue("body")
 
 	view := m.View().Content

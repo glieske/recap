@@ -11,7 +11,7 @@ import (
 
 func TestHelpOverlay(t *testing.T) {
 	t.Run("app init delegates to list init", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "", false)
+		m := NewAppModel(&config.Config{}, nil, nil, "", false, "")
 
 		got := m.Init()
 		want := m.listModel.Init()
@@ -21,7 +21,7 @@ func TestHelpOverlay(t *testing.T) {
 	})
 
 	t.Run("help toggle on creates modal on meeting list", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "", false)
+		m := NewAppModel(&config.Config{}, nil, nil, "", false, "")
 		m.screen = ScreenMeetingList
 
 		updated, cmd := appUpdate(t, m, tea.KeyPressMsg{Text: "?"})
@@ -41,7 +41,7 @@ func TestHelpOverlay(t *testing.T) {
 	})
 
 	t.Run("help toggle off via question mark", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "", false)
+		m := NewAppModel(&config.Config{}, nil, nil, "", false, "")
 		opened, _ := appUpdate(t, m, tea.KeyPressMsg{Text: "?"})
 		if !opened.showHelp {
 			t.Fatalf("expected showHelp true after opening, got %v", opened.showHelp)
@@ -58,7 +58,7 @@ func TestHelpOverlay(t *testing.T) {
 	})
 
 	t.Run("help dismiss via esc emits dismiss message then closes next cycle", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "", false)
+		m := NewAppModel(&config.Config{}, nil, nil, "", false, "")
 		opened, _ := appUpdate(t, m, tea.KeyPressMsg{Text: "?"})
 
 		afterEsc, cmd := appUpdate(t, opened, tea.KeyPressMsg{Code: tea.KeyEscape})
@@ -84,7 +84,7 @@ func TestHelpOverlay(t *testing.T) {
 	})
 
 	t.Run("ctrl+c always quits even when help is open", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "", false)
+		m := NewAppModel(&config.Config{}, nil, nil, "", false, "")
 		opened, _ := appUpdate(t, m, tea.KeyPressMsg{Text: "?"})
 
 		_, cmd := appUpdate(t, opened, tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl})
@@ -99,7 +99,7 @@ func TestHelpOverlay(t *testing.T) {
 	})
 
 	t.Run("input trap blocks underlying screen shortcuts while help is open", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "", false)
+		m := NewAppModel(&config.Config{}, nil, nil, "", false, "")
 		m.screen = ScreenMeetingList
 		opened, _ := appUpdate(t, m, tea.KeyPressMsg{Text: "?"})
 
@@ -121,7 +121,7 @@ func TestHelpOverlay(t *testing.T) {
 	})
 
 	t.Run("view compositing overlays help content on top of base screen", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "", false)
+		m := NewAppModel(&config.Config{}, nil, nil, "", false, "")
 		m.screen = ScreenMeetingList
 		opened, _ := appUpdate(t, m, tea.KeyPressMsg{Text: "?"})
 
@@ -151,7 +151,7 @@ func TestHelpOverlay(t *testing.T) {
 	})
 
 	t.Run("opening and closing help preserves underlying screen", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "", false)
+		m := NewAppModel(&config.Config{}, nil, nil, "", false, "")
 		m.screen = ScreenMeetingList
 
 		opened, _ := appUpdate(t, m, tea.KeyPressMsg{Text: "?"})
@@ -282,7 +282,7 @@ func TestHelpView_EmailScreen(t *testing.T) {
 }
 
 func TestAppModel_HelpOpensWithCorrectScreen(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.screen = ScreenMeetingList
 
 	updated, _ := appUpdate(t, m, tea.KeyPressMsg{Code: '/', Mod: tea.ModCtrl})

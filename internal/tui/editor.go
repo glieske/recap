@@ -42,6 +42,7 @@ type EditorModel struct {
 	store           *storage.Store
 	providerName    string
 	providerModel   string
+	version         string
 	width           int
 	height          int
 	dirty           bool
@@ -52,7 +53,7 @@ type EditorModel struct {
 	err             error
 }
 
-func NewEditorModel(meeting *storage.Meeting, store *storage.Store, width, height int, providerName, providerModel string) EditorModel {
+func NewEditorModel(meeting *storage.Meeting, store *storage.Store, width, height int, providerName, providerModel, version string) EditorModel {
 	now := time.Now()
 	input := textarea.New()
 	input.SetWidth(width)
@@ -72,6 +73,7 @@ func NewEditorModel(meeting *storage.Meeting, store *storage.Store, width, heigh
 		store:         store,
 		providerName:  providerName,
 		providerModel: providerModel,
+		version:       version,
 		width:         width,
 		height:        height,
 		dirty:         false,
@@ -417,6 +419,9 @@ func (m EditorModel) renderStatusBar() string {
 	}
 	if m.statusMsg != "" && time.Now().Before(m.statusExpiry) {
 		right += " | " + m.statusMsg
+	}
+	if m.version != "" {
+		right += " | " + m.version
 	}
 
 	barWidth := m.width

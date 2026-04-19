@@ -12,9 +12,9 @@ import (
 
 func TestAppProviderCtrlOOpensSelectorFromEditor(t *testing.T) {
 	cfg := &config.Config{AIProvider: "github_models", GitHubModel: "gpt-4o"}
-	m := NewAppModel(cfg, nil, appTestProvider{}, "", false)
+	m := NewAppModel(cfg, nil, appTestProvider{}, "", false, "")
 	m.screen = ScreenEditor
-	m.editorModel = NewEditorModel(nil, nil, 80, 24, "", "")
+	m.editorModel = NewEditorModel(nil, nil, 80, 24, "", "", "")
 	m.hasEditorModel = true
 
 	updated, _ := appUpdate(t, m, tea.KeyPressMsg{Code: 'o', Mod: tea.ModCtrl})
@@ -32,7 +32,7 @@ func TestAppProviderCtrlOOpensSelectorFromEditor(t *testing.T) {
 
 func TestAppProviderCtrlOFromNonEditorDoesNotSwitchScreen(t *testing.T) {
 	cfg := &config.Config{AIProvider: "github_models", GitHubModel: "gpt-4o"}
-	m := NewAppModel(cfg, nil, appTestProvider{}, "", false)
+	m := NewAppModel(cfg, nil, appTestProvider{}, "", false, "")
 	m.screen = ScreenMeetingList
 
 	updated, _ := appUpdate(t, m, tea.KeyPressMsg{Code: 'o', Mod: tea.ModCtrl})
@@ -51,9 +51,9 @@ func TestAppProviderSelectedMsgSuccessfulSwitchReturnsToEditor(t *testing.T) {
 		GitHubModel:   "gpt-4o",
 		LMStudioModel: "local-model",
 	}
-	m := NewAppModel(cfg, nil, appTestProvider{}, "", false)
+	m := NewAppModel(cfg, nil, appTestProvider{}, "", false, "")
 	m.screen = ScreenProviderSelector
-	m.editorModel = NewEditorModel(nil, nil, 80, 24, "GitHub Models", "gpt-4o")
+	m.editorModel = NewEditorModel(nil, nil, 80, 24, "GitHub Models", "gpt-4o", "")
 	m.hasEditorModel = true
 
 	updated, _ := appUpdate(t, m, ProviderSelectedMsg{ProviderName: "lm_studio"})
@@ -84,9 +84,9 @@ func TestAppProviderSelectedMsgSuccessfulSwitchReturnsToEditor(t *testing.T) {
 func TestAppProviderSelectedMsgFailedSwitchRevertsConfigAndProvider(t *testing.T) {
 	cfg := &config.Config{AIProvider: "github_models", GitHubModel: "gpt-4o"}
 	oldProvider := appTestProvider{emailResponse: "existing"}
-	m := NewAppModel(cfg, nil, oldProvider, "", false)
+	m := NewAppModel(cfg, nil, oldProvider, "", false, "")
 	m.screen = ScreenProviderSelector
-	m.editorModel = NewEditorModel(nil, nil, 80, 24, "GitHub Models", "gpt-4o")
+	m.editorModel = NewEditorModel(nil, nil, 80, 24, "GitHub Models", "gpt-4o", "")
 	m.hasEditorModel = true
 	m.providerFactory = func(*config.Config) (ai.Provider, error) {
 		return nil, errors.New("mock provider failure")
@@ -113,7 +113,7 @@ func TestAppProviderSelectedMsgFailedSwitchRevertsConfigAndProvider(t *testing.T
 
 func TestAppProviderEscFromProviderSelectorReturnsToEditor(t *testing.T) {
 	cfg := &config.Config{AIProvider: "github_models", GitHubModel: "gpt-4o"}
-	m := NewAppModel(cfg, nil, appTestProvider{}, "", false)
+	m := NewAppModel(cfg, nil, appTestProvider{}, "", false, "")
 	m.screen = ScreenEditor
 	m.providerModel = NewProviderModel(cfg.AIProvider, 80, 24)
 	m.hasProviderModel = true
@@ -143,7 +143,7 @@ func TestAppProviderEscFromProviderSelectorReturnsToEditor(t *testing.T) {
 
 func TestAppProviderQuestionMarkPassesThroughWithoutOpeningHelp(t *testing.T) {
 	cfg := &config.Config{AIProvider: "github_models", GitHubModel: "gpt-4o"}
-	m := NewAppModel(cfg, nil, appTestProvider{}, "", false)
+	m := NewAppModel(cfg, nil, appTestProvider{}, "", false, "")
 	m.screen = ScreenEditor
 	m.providerModel = NewProviderModel(cfg.AIProvider, 80, 24)
 	m.hasProviderModel = true
@@ -162,7 +162,7 @@ func TestAppProviderQuestionMarkPassesThroughWithoutOpeningHelp(t *testing.T) {
 
 func TestAppProviderWindowSizePropagatesToProviderModel(t *testing.T) {
 	cfg := &config.Config{AIProvider: "github_models", GitHubModel: "gpt-4o"}
-	m := NewAppModel(cfg, nil, appTestProvider{}, "", false)
+	m := NewAppModel(cfg, nil, appTestProvider{}, "", false, "")
 	m.providerModel = NewProviderModel(cfg.AIProvider, 40, 10)
 	m.hasProviderModel = true
 	m.showProvider = true

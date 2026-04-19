@@ -42,7 +42,7 @@ func TestFocusAdversarialRapidTabTogglingAlternatesWithoutStateCorruption(t *tes
 }
 
 func TestFocusAdversarialTabWhenSplitWithoutSummaryRoutesToTextarea(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 	m.splitMode = true
 	m.hasSummaryModel = false
 	m.focusedPane = 0
@@ -133,7 +133,7 @@ func TestFocusAdversarialCtrlEOnRightPaneEmitsTriggerEmailOnly(t *testing.T) {
 }
 
 func TestFocusAdversarialWindowSizeHeightFiveClampsInnerPaneHeightToOne(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 	sm := NewSummaryModel("test", "", "", nil, 60, 20)
 	m.SetSummaryModel(sm)
 
@@ -154,7 +154,7 @@ func TestFocusAdversarialWindowSizeHeightFiveClampsInnerPaneHeightToOne(t *testi
 }
 
 func TestFocusAdversarialResizeNarrowKeepsSplitActive(t *testing.T) {
-	m := NewEditorModel(nil, nil, 100, 24, "", "")
+	m := NewEditorModel(nil, nil, 100, 24, "", "", "")
 	sm := NewSummaryModel("test", "", "", nil, 60, 20)
 	m.SetSummaryModel(sm)
 

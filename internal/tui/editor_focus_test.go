@@ -22,7 +22,7 @@ func updateEditorFocusModelForTest(t *testing.T, m EditorModel, msg tea.Msg) (Ed
 func setupSplitEditorForFocusTests(t *testing.T) EditorModel {
 	t.Helper()
 
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 	m.textarea.SetValue("left")
 	sm := NewSummaryModel("right", "", "", nil, 60, 20)
 	m.SetSummaryModel(sm)
@@ -78,7 +78,7 @@ func TestFocusTabSwitchesFromLeftToRightAndBack(t *testing.T) {
 }
 
 func TestFocusTabOutsideSplitPassesToTextareaAndMarksDirty(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 
 	updated, _ := updateEditorFocusModelForTest(t, m, tea.KeyPressMsg{Code: tea.KeyTab})
 	if updated.splitMode {
@@ -117,7 +117,7 @@ func TestFocusEscInSplitCollapsesAndRestoresHeight(t *testing.T) {
 }
 
 func TestFocusEscOutsideSplitPassesToTextarea(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 
 	updated, _ := updateEditorFocusModelForTest(t, m, tea.KeyPressMsg{Code: tea.KeyEscape})
 	if updated.splitMode {
@@ -204,7 +204,7 @@ func TestFocusViewSplitModeUsesDifferentBordersPerPane(t *testing.T) {
 }
 
 func TestFocusEnteringSplitAdjustsInnerPaneHeight(t *testing.T) {
-	m := NewEditorModel(nil, nil, 120, 24, "", "")
+	m := NewEditorModel(nil, nil, 120, 24, "", "", "")
 	sm := NewSummaryModel("content", "", "", nil, 60, 20)
 	m.SetSummaryModel(sm)
 

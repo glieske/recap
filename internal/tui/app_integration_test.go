@@ -78,7 +78,7 @@ func createProjectAndMeeting(t *testing.T, store *storage.Store) *storage.Meetin
 }
 
 func TestAppNewAppModelStartsOnWelcome(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 
 	if m.screen != ScreenWelcome {
 		t.Fatalf("expected initial screen %v, got %v", ScreenWelcome, m.screen)
@@ -86,7 +86,7 @@ func TestAppNewAppModelStartsOnWelcome(t *testing.T) {
 }
 
 func TestAppInitReturnsCommand(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 
 	got := m.Init()
 	want := m.listModel.Init()
@@ -96,7 +96,7 @@ func TestAppInitReturnsCommand(t *testing.T) {
 }
 
 func TestAppWindowSizeUpdatesModel(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 
 	updated, _ := appUpdate(t, m, tea.WindowSizeMsg{Width: 120, Height: 35})
 
@@ -110,7 +110,7 @@ func TestAppWindowSizeUpdatesModel(t *testing.T) {
 
 func TestAppNavigateToNewMeeting(t *testing.T) {
 	store := newTestStore(t)
-	m := NewAppModel(nil, store, nil, "", false)
+	m := NewAppModel(nil, store, nil, "", false, "")
 	m.screen = ScreenMeetingList
 
 	updated, _ := appUpdate(t, m, NavigateMsg{Screen: ScreenNewMeeting})
@@ -130,7 +130,7 @@ func TestAppNavigateToNewMeeting(t *testing.T) {
 }
 
 func TestAppQuitOnlyFromListScreen(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.screen = ScreenMeetingList
 
 	fromList, cmd := appUpdate(t, m, appKeyRunes("q"))
@@ -139,9 +139,9 @@ func TestAppQuitOnlyFromListScreen(t *testing.T) {
 	}
 	assertQuitCmd(t, cmd)
 
-	fromEditor := NewAppModel(nil, nil, nil, "", false)
+	fromEditor := NewAppModel(nil, nil, nil, "", false, "")
 	fromEditor.screen = ScreenEditor
-	fromEditor.editorModel = NewEditorModel(nil, nil, 80, 24, "", "")
+	fromEditor.editorModel = NewEditorModel(nil, nil, 80, 24, "", "", "")
 	fromEditor.hasEditorModel = true
 
 	updatedEditor, editorCmd := appUpdate(t, fromEditor, appKeyRunes("q"))
@@ -162,11 +162,11 @@ func TestAppCtrlCQuitsFromAnyScreen(t *testing.T) {
 
 	for _, screen := range testScreens {
 		t.Run(screenName(screen), func(t *testing.T) {
-			m := NewAppModel(nil, nil, nil, "", false)
+			m := NewAppModel(nil, nil, nil, "", false, "")
 			m.screen = screen
 
 			if screen == ScreenEditor {
-				m.editorModel = NewEditorModel(nil, nil, 80, 24, "", "")
+				m.editorModel = NewEditorModel(nil, nil, 80, 24, "", "", "")
 				m.hasEditorModel = true
 			}
 
@@ -177,7 +177,7 @@ func TestAppCtrlCQuitsFromAnyScreen(t *testing.T) {
 }
 
 func TestAppHelpToggle(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.screen = ScreenMeetingList
 
 	toHelp, _ := appUpdate(t, m, appKeyRunes("?"))
@@ -198,9 +198,9 @@ func TestAppHelpToggle(t *testing.T) {
 }
 
 func TestAppQuestionMarkDelegatesToEditorScreen(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.screen = ScreenEditor
-	m.editorModel = NewEditorModel(nil, nil, 80, 24, "", "")
+	m.editorModel = NewEditorModel(nil, nil, 80, 24, "", "", "")
 	m.hasEditorModel = true
 
 	updated, _ := appUpdate(t, m, appKeyRunes("?"))
@@ -210,9 +210,9 @@ func TestAppQuestionMarkDelegatesToEditorScreen(t *testing.T) {
 }
 
 func TestAppEscFromEditorSequencesSaveAndRefresh(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.screen = ScreenEditor
-	m.editorModel = NewEditorModel(nil, nil, 80, 24, "", "")
+	m.editorModel = NewEditorModel(nil, nil, 80, 24, "", "", "")
 	m.hasEditorModel = true
 
 	updated, cmd := appUpdate(t, m, tea.KeyPressMsg{Code: tea.KeyEscape})
@@ -225,7 +225,7 @@ func TestAppEscFromEditorSequencesSaveAndRefresh(t *testing.T) {
 }
 
 func TestAppEscFromHelpReturnsToPreviousScreen(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.screen = ScreenEditor
 	m.showHelp = true
 
@@ -248,7 +248,7 @@ func TestAppEscFromHelpReturnsToPreviousScreen(t *testing.T) {
 func TestAppMeetingSelectedMsgCreatesEditor(t *testing.T) {
 	store := newTestStore(t)
 	meeting := createProjectAndMeeting(t, store)
-	m := NewAppModel(nil, store, nil, "", false)
+	m := NewAppModel(nil, store, nil, "", false, "")
 
 	updated, cmd := appUpdate(t, m, MeetingSelectedMsg{Meeting: *meeting})
 
@@ -272,9 +272,9 @@ func TestAppMeetingSelectedMsgCreatesEditor(t *testing.T) {
 func TestAppTriggerAIMsgWithoutProviderIsNoOp(t *testing.T) {
 	store := newTestStore(t)
 	meeting := createProjectAndMeeting(t, store)
-	m := NewAppModel(nil, store, nil, "", false)
+	m := NewAppModel(nil, store, nil, "", false, "")
 	m.currentMeeting = meeting
-	m.editorModel = NewEditorModel(meeting, store, 80, 24, "", "")
+	m.editorModel = NewEditorModel(meeting, store, 80, 24, "", "", "")
 	m.hasEditorModel = true
 
 	updated, cmd := appUpdate(t, m, TriggerAIMsg{})
@@ -287,9 +287,9 @@ func TestAppTriggerAIMsgWithoutProviderIsNoOp(t *testing.T) {
 }
 
 func TestAppTogglePreviewFromEditor(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.screen = ScreenEditor
-	m.editorModel = NewEditorModel(nil, nil, 80, 24, "", "")
+	m.editorModel = NewEditorModel(nil, nil, 80, 24, "", "", "")
 	m.hasEditorModel = true
 
 	updated, _ := appUpdate(t, m, TogglePreviewMsg{})
@@ -299,7 +299,7 @@ func TestAppTogglePreviewFromEditor(t *testing.T) {
 }
 
 func TestAppViewUnknownScreen(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "", false)
+	m := NewAppModel(nil, nil, nil, "", false, "")
 	m.screen = Screen(999)
 
 	got := m.View().Content

@@ -16,7 +16,7 @@ import (
 func TestAdversarialEditor(t *testing.T) {
 	t.Run("saveCmd concurrent empty and oversized payload", func(t *testing.T) {
 		store, meeting := createEditorTestStoreAndMeeting(t)
-		m := NewEditorModel(meeting, store, 80, 20, "", "")
+		m := NewEditorModel(meeting, store, 80, 20, "", "", "")
 
 		empty := ""
 		oversized := strings.Repeat("A", 12*1024)
@@ -122,7 +122,7 @@ func TestAdversarialEditor(t *testing.T) {
 	})
 
 	t.Run("NewEditorModel nil and negative dimensions", func(t *testing.T) {
-		mZero := NewEditorModel(nil, nil, 0, 0, "", "")
+		mZero := NewEditorModel(nil, nil, 0, 0, "", "", "")
 		if mZero.width != 0 || mZero.height != 0 {
 			t.Fatalf("zero dimensions: expected width=0 height=0, got width=%d height=%d", mZero.width, mZero.height)
 		}
@@ -130,7 +130,7 @@ func TestAdversarialEditor(t *testing.T) {
 			t.Fatalf("nil dependencies: expected meeting/store nil")
 		}
 
-		mNeg := NewEditorModel(nil, nil, -10, -20, "", "")
+		mNeg := NewEditorModel(nil, nil, -10, -20, "", "", "")
 		if mNeg.width != -10 || mNeg.height != -20 {
 			t.Fatalf("negative dimensions: expected width=-10 height=-20, got width=%d height=%d", mNeg.width, mNeg.height)
 		}
@@ -140,7 +140,7 @@ func TestAdversarialEditor(t *testing.T) {
 	})
 
 	t.Run("Init returns command for malformed model dimensions", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, -1, -1, "", "")
+		m := NewEditorModel(nil, nil, -1, -1, "", "", "")
 		if cmd := m.Init(); cmd == nil {
 			t.Fatalf("expected non-nil init command for malformed dimensions")
 		}
@@ -148,7 +148,7 @@ func TestAdversarialEditor(t *testing.T) {
 
 	t.Run("Update rapid autosave ticks while clean", func(t *testing.T) {
 		store, meeting := createEditorTestStoreAndMeeting(t)
-		m := NewEditorModel(meeting, store, 80, 20, "", "")
+		m := NewEditorModel(meeting, store, 80, 20, "", "", "")
 		m.dirty = false
 
 		for i := 0; i < 250; i++ {
@@ -168,7 +168,7 @@ func TestAdversarialEditor(t *testing.T) {
 	})
 
 	t.Run("renderStatusBar nil meeting zero width and long identifiers", func(t *testing.T) {
-		mNil := NewEditorModel(nil, nil, 0, 10, "", "")
+		mNil := NewEditorModel(nil, nil, 0, 10, "", "", "")
 		mNil.textarea.SetValue("x")
 		barNil := mNil.renderStatusBar()
 		if !strings.Contains(barNil, "-") {
@@ -178,7 +178,7 @@ func TestAdversarialEditor(t *testing.T) {
 		store, meeting := createEditorTestStoreAndMeeting(t)
 		meeting.TicketID = strings.Repeat("TICKET-", 300)
 		meeting.Title = strings.Repeat("非常に長いタイトル🚀", 200)
-		mLong := NewEditorModel(meeting, store, 40, 10, "", "")
+		mLong := NewEditorModel(meeting, store, 40, 10, "", "", "")
 		mLong.textarea.SetValue(strings.Repeat("Z", 2048))
 		barLong := mLong.renderStatusBar()
 		if barLong == "" {
@@ -187,7 +187,7 @@ func TestAdversarialEditor(t *testing.T) {
 	})
 
 	t.Run("Update SaveErrMsg after SaveDoneMsg sequence", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, 80, 20, "", "")
+		m := NewEditorModel(nil, nil, 80, 20, "", "", "")
 
 		updatedAfterDoneModel, cmd := m.Update(SaveDoneMsg{})
 		if cmd != nil {
@@ -222,7 +222,7 @@ func TestAdversarialEditor(t *testing.T) {
 	})
 
 	t.Run("Update SaveErrMsg with nil error panics", func(t *testing.T) {
-		m := NewEditorModel(nil, nil, 80, 20, "", "")
+		m := NewEditorModel(nil, nil, 80, 20, "", "", "")
 		defer func() {
 			recovered := recover()
 			if recovered == nil {
