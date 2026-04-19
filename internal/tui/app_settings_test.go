@@ -75,7 +75,7 @@ func TestAppSettingsCtrlCommaOpensSettingsModal(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			m := NewAppModel(baseSettingsConfig(), nil, nil, "")
+			m := NewAppModel(baseSettingsConfig(), nil, nil, "", false)
 			m.screen = tc.screen
 
 			updated, cmd := appUpdate(t, m, tea.KeyPressMsg{Code: ',', Mod: tea.ModCtrl})
@@ -97,7 +97,7 @@ func TestAppSettingsCtrlCommaOpensSettingsModal(t *testing.T) {
 }
 
 func TestAppSettingsModalTrapsKeys(t *testing.T) {
-	m := NewAppModel(baseSettingsConfig(), nil, nil, "")
+	m := NewAppModel(baseSettingsConfig(), nil, nil, "", false)
 	spy := &settingsSpyModel{emit: settingsForwardedMsg{}}
 	m.showSettings = true
 	m.settingsModal = NewModalModel("Settings", spy, m.width, m.height)
@@ -125,7 +125,7 @@ func TestAppSettingsModalTrapsKeys(t *testing.T) {
 }
 
 func TestAppSettingsDismissModalClosesSettings(t *testing.T) {
-	m := NewAppModel(baseSettingsConfig(), nil, nil, "")
+	m := NewAppModel(baseSettingsConfig(), nil, nil, "", false)
 	m.showSettings = true
 
 	updated, _ := appUpdate(t, m, DismissModalMsg{})
@@ -136,7 +136,7 @@ func TestAppSettingsDismissModalClosesSettings(t *testing.T) {
 }
 
 func TestAppSettingsDismissModalRespectsZOrder(t *testing.T) {
-	m := NewAppModel(baseSettingsConfig(), nil, nil, "")
+	m := NewAppModel(baseSettingsConfig(), nil, nil, "", false)
 	m.showProvider = true
 	m.showSettings = true
 
@@ -156,7 +156,7 @@ func TestAppSettingsUpdatedReloadsProviderAndSetsStatus(t *testing.T) {
 	updatedCfg := baseSettingsConfig()
 	updatedCfg.AIProvider = "lm_studio"
 
-	m := NewAppModel(baseSettingsConfig(), nil, oldProvider, "")
+	m := NewAppModel(baseSettingsConfig(), nil, oldProvider, "", false)
 	m.showSettings = true
 
 	factoryCalls := 0
@@ -192,7 +192,7 @@ func TestAppSettingsUpdatedFactoryErrorPreservesProvider(t *testing.T) {
 	updatedCfg := baseSettingsConfig()
 	updateErr := errors.New("provider init failed")
 
-	m := NewAppModel(baseSettingsConfig(), nil, oldProvider, "")
+	m := NewAppModel(baseSettingsConfig(), nil, oldProvider, "", false)
 	m.providerFactory = func(*config.Config) (ai.Provider, error) {
 		return nil, updateErr
 	}
@@ -211,7 +211,7 @@ func TestAppSettingsUpdatedFactoryErrorPreservesProvider(t *testing.T) {
 }
 
 func TestAppSettingsViewRendersSettingsOverlay(t *testing.T) {
-	m := NewAppModel(baseSettingsConfig(), nil, nil, "")
+	m := NewAppModel(baseSettingsConfig(), nil, nil, "", false)
 	m.width = 200
 	m.height = 40
 	spy := &settingsSpyModel{view: "SOK"}

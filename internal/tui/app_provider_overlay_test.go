@@ -28,7 +28,7 @@ func openProviderOverlayFromEditor(t *testing.T) AppModel {
 	t.Helper()
 
 	cfg := &config.Config{AIProvider: "github_models", GitHubModel: "gpt-4o"}
-	m := NewAppModel(cfg, nil, appTestProvider{}, "")
+	m := NewAppModel(cfg, nil, appTestProvider{}, "", false)
 	m.screen = ScreenEditor
 	m.editorModel = NewEditorModel(nil, nil, 80, 24, "", "")
 	m.hasEditorModel = true
@@ -113,7 +113,7 @@ func TestProviderOverlayProviderSelectedClosesOverlay(t *testing.T) {
 
 func TestProviderOverlayDismissModalMsgZOrderProviderThenNewMeetingThenHelp(t *testing.T) {
 	cfg := &config.Config{AIProvider: "github_models", GitHubModel: "gpt-4o"}
-	m := NewAppModel(cfg, nil, appTestProvider{}, "")
+	m := NewAppModel(cfg, nil, appTestProvider{}, "", false)
 	m.screen = ScreenEditor
 	m.showHelp = true
 	m.showNewMeeting = true
@@ -148,7 +148,7 @@ func TestProviderOverlayDismissModalMsgZOrderProviderThenNewMeetingThenHelp(t *t
 }
 
 func TestProviderOverlayViewRendersProviderOnTopOfHelpAndNewMeeting(t *testing.T) {
-	m := NewAppModel(&config.Config{}, nil, nil, "")
+	m := NewAppModel(&config.Config{}, nil, nil, "", false)
 	m.screen = ScreenMeetingList
 	m.width = 80
 	m.height = 24

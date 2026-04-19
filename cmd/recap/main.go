@@ -19,6 +19,11 @@ func main() {
 	configShort := flag.String("c", "", "override config file path")
 	versionLong := flag.Bool("version", false, "print version and exit")
 	versionShort := flag.Bool("v", false, "print version and exit")
+	autoNew := false
+	if len(os.Args) > 1 && os.Args[1] == "new" {
+		autoNew = true
+		os.Args = append(os.Args[:1], os.Args[2:]...)
+	}
 	flag.Parse()
 
 	if *versionLong || *versionShort {
@@ -45,7 +50,7 @@ func main() {
 		provider = nil
 	}
 
-	app := tui.NewAppModel(cfg, store, provider, configPath)
+	app := tui.NewAppModel(cfg, store, provider, configPath, autoNew)
 	p := tea.NewProgram(app)
 
 	if _, err := p.Run(); err != nil {

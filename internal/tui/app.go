@@ -37,6 +37,7 @@ type AppModel struct {
 	providerFactory providerFactoryFunc
 	cfg             *config.Config
 	configPath      string
+	autoNewMeeting  bool
 	err             error
 
 	listModel       ListModel
@@ -74,7 +75,7 @@ type AppModel struct {
 	statusMsg      string
 }
 
-func NewAppModel(cfg *config.Config, store *storage.Store, provider ai.Provider, configPath string) AppModel {
+func NewAppModel(cfg *config.Config, store *storage.Store, provider ai.Provider, configPath string, autoNewMeeting bool) AppModel {
 	return AppModel{
 		screen:          ScreenWelcome,
 		previousScreen:  ScreenWelcome,
@@ -85,6 +86,7 @@ func NewAppModel(cfg *config.Config, store *storage.Store, provider ai.Provider,
 		providerFactory: ai.NewProvider,
 		cfg:             cfg,
 		configPath:      configPath,
+		autoNewMeeting:  autoNewMeeting,
 		listModel:       NewListModel(store, 80, 24),
 		welcomeModel:    NewWelcomeModel(80, 24),
 		helpModel:       NewHelpModel(),
@@ -92,6 +94,12 @@ func NewAppModel(cfg *config.Config, store *storage.Store, provider ai.Provider,
 }
 
 func (m AppModel) Init() tea.Cmd {
+	if m.autoNewMeeting {
+		return tea.Batch(m.listModel.Init(), func() tea.Msg {
+			return NavigateMsg{Screen: ScreenNewMeeting}
+		})
+	}
+
 	return m.listModel.Init()
 }
 
@@ -546,6 +554,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.showHelp = !m.showHelp
 			if m.showHelp {
+				m.helpModel.screen = m.screen
 				m.helpModal = NewModalModel("Help", m.helpModel, m.width, m.height)
 			}
 			return m, nil

@@ -10,6 +10,7 @@ import (
 type HelpModel struct {
 	width  int
 	height int
+	screen Screen
 }
 
 func NewHelpModel() HelpModel {
@@ -37,10 +38,12 @@ func (m HelpModel) View() tea.View {
 
 	title := titleStyle.Render("⌨ Keybindings")
 
-	sections := []struct {
+	type section struct {
 		header   string
 		bindings [][2]string
-	}{
+	}
+
+	allSections := []section{
 		{
 			header: "Global",
 			bindings: [][2]string{
@@ -106,16 +109,39 @@ func (m HelpModel) View() tea.View {
 		},
 	}
 
+	// visibleHeaders determines which sections are shown for each screen.
+	// "Global" is always included.
+	var visibleHeaders map[string]bool
+	switch m.screen {
+	case ScreenWelcome:
+		visibleHeaders = map[string]bool{"Global": true, "Welcome Screen": true}
+	case ScreenMeetingList:
+		visibleHeaders = map[string]bool{"Global": true, "Meeting List": true, "Confirmation Dialogs": true}
+	case ScreenEditor:
+		visibleHeaders = map[string]bool{"Global": true, "Editor": true, "Split Pane": true, "Confirmation Dialogs": true}
+	case ScreenEmail:
+		visibleHeaders = map[string]bool{"Global": true, "Email": true}
+	default:
+		visibleHeaders = map[string]bool{"Global": true}
+	}
+
+	visible := make([]section, 0, len(allSections))
+	for _, section := range allSections {
+		if visibleHeaders[section.header] {
+			visible = append(visible, section)
+		}
+	}
+
 	lines := make([]string, 0, 32)
 	lines = append(lines, title, "")
 
-	for sectionIndex, section := range sections {
+	for sectionIndex, section := range visible {
 		lines = append(lines, sectionHeaderStyle.Render(section.header))
 		for _, binding := range section.bindings {
 			lines = append(lines, "  "+keyStyle.Render(binding[0])+" — "+binding[1])
 		}
 
-		if sectionIndex < len(sections)-1 {
+		if sectionIndex < len(visible)-1 {
 			lines = append(lines, "")
 		}
 	}

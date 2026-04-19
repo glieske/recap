@@ -10,7 +10,7 @@ import (
 
 func TestNewMeetingAdversarial_DoubleOpenReplacesOverlayWithoutCorruption(t *testing.T) {
 	store := newTestStore(t)
-	m := NewAppModel(nil, store, nil, "")
+	m := NewAppModel(nil, store, nil, "", false)
 	m.screen = ScreenMeetingList
 
 	firstOpen, _ := appUpdate(t, m, NavigateMsg{Screen: ScreenNewMeeting})
@@ -37,7 +37,7 @@ func TestNewMeetingAdversarial_DoubleOpenReplacesOverlayWithoutCorruption(t *tes
 }
 
 func TestNewMeetingAdversarial_DismissWhenNoOverlayIsNoOp(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "")
+	m := NewAppModel(nil, nil, nil, "", false)
 	m.screen = ScreenMeetingList
 	m.showNewMeeting = false
 	m.showHelp = false
@@ -56,7 +56,7 @@ func TestNewMeetingAdversarial_DismissWhenNoOverlayIsNoOp(t *testing.T) {
 }
 
 func TestNewMeetingAdversarial_MeetingCreatedNilWhenClosedDoesNotCorruptState(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "")
+	m := NewAppModel(nil, nil, nil, "", false)
 	beforeScreen := m.screen
 
 	updated, cmd := appUpdate(t, m, MeetingCreatedMsg{Meeting: nil})
@@ -80,7 +80,7 @@ func TestNewMeetingAdversarial_MeetingCreatedNilWhenClosedDoesNotCorruptState(t 
 
 func TestNewMeetingAdversarial_ZeroSizeWindowWhileOverlayVisible(t *testing.T) {
 	store := newTestStore(t)
-	m := NewAppModel(nil, store, nil, "")
+	m := NewAppModel(nil, store, nil, "", false)
 	m.screen = ScreenMeetingList
 
 	opened, _ := appUpdate(t, m, NavigateMsg{Screen: ScreenNewMeeting})
@@ -108,7 +108,7 @@ func TestNewMeetingAdversarial_ZeroSizeWindowWhileOverlayVisible(t *testing.T) {
 
 func TestNewMeetingAdversarial_RapidOpenCloseCyclesDoNotLeakState(t *testing.T) {
 	store := newTestStore(t)
-	m := NewAppModel(nil, store, nil, "")
+	m := NewAppModel(nil, store, nil, "", false)
 	m.screen = ScreenMeetingList
 
 	for i := 0; i < 10; i++ {
@@ -144,7 +144,7 @@ func TestNewMeetingAdversarial_RapidOpenCloseCyclesDoNotLeakState(t *testing.T) 
 }
 
 func TestNewMeetingAdversarial_MeetingCreatedNilWithBoundaryTimestampInput(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "")
+	m := NewAppModel(nil, nil, nil, "", false)
 	boundaryMeeting := &storage.Meeting{Date: time.Unix(0, 0).UTC()}
 
 	opened, _ := appUpdate(t, m, NavigateMsg{Screen: ScreenNewMeeting})

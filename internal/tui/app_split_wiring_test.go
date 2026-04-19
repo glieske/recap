@@ -5,7 +5,7 @@ import "testing"
 func TestAppSplitWiringMeetingSelectedWiresSummaryModel(t *testing.T) {
 	store := newTestStore(t)
 	meeting := createProjectAndMeeting(t, store)
-	m := NewAppModel(nil, store, nil, "")
+	m := NewAppModel(nil, store, nil, "", false)
 
 	updated, _ := appUpdate(t, m, MeetingSelectedMsg{Meeting: *meeting})
 
@@ -23,7 +23,7 @@ func TestAppSplitWiringMeetingSelectedWiresSummaryModel(t *testing.T) {
 func TestAppSplitWiringMeetingCreatedWiresSummaryModel(t *testing.T) {
 	store := newTestStore(t)
 	meeting := createProjectAndMeeting(t, store)
-	m := NewAppModel(nil, store, nil, "")
+	m := NewAppModel(nil, store, nil, "", false)
 
 	updated, _ := appUpdate(t, m, MeetingCreatedMsg{Meeting: meeting})
 
@@ -41,7 +41,7 @@ func TestAppSplitWiringMeetingCreatedWiresSummaryModel(t *testing.T) {
 func TestAppSplitWiringAIStructureDoneUpdatesSummaryContent(t *testing.T) {
 	store := newTestStore(t)
 	meeting := createProjectAndMeeting(t, store)
-	m := NewAppModel(nil, store, nil, "")
+	m := NewAppModel(nil, store, nil, "", false)
 
 	updated, _ := appUpdate(t, m, MeetingSelectedMsg{Meeting: *meeting})
 	if updated.editorModel.hasSummaryModel != true {
@@ -64,7 +64,7 @@ func TestAppSplitWiringAIStructureDoneUpdatesSummaryContent(t *testing.T) {
 func TestAppSplitWiringTogglePreviewIsNoOpOnEditorScreen(t *testing.T) {
 	store := newTestStore(t)
 	meeting := createProjectAndMeeting(t, store)
-	m := NewAppModel(nil, store, nil, "")
+	m := NewAppModel(nil, store, nil, "", false)
 
 	updated, _ := appUpdate(t, m, MeetingSelectedMsg{Meeting: *meeting})
 	if updated.screen != ScreenEditor {

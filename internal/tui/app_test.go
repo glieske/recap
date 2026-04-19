@@ -29,7 +29,7 @@ func (p appTestProvider) GenerateEmailSummary(context.Context, string, string) (
 func TestAppMeetingCreatedMsgCreatesEditorAndSwitchesScreen(t *testing.T) {
 	store := newTestStore(t)
 	meeting := createProjectAndMeeting(t, store)
-	m := NewAppModel(nil, store, nil, "")
+	m := NewAppModel(nil, store, nil, "", false)
 
 	updated, cmd := appUpdate(t, m, MeetingCreatedMsg{Meeting: meeting})
 
@@ -51,7 +51,7 @@ func TestAppMeetingCreatedMsgCreatesEditorAndSwitchesScreen(t *testing.T) {
 }
 
 func TestAppAIStructureDoneMsgSetsStructuredState(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "")
+	m := NewAppModel(nil, nil, nil, "", false)
 	m.aiRunning = true
 
 	const structuredBody = "# Structured Notes\n- Action 1"
@@ -66,7 +66,7 @@ func TestAppAIStructureDoneMsgSetsStructuredState(t *testing.T) {
 }
 
 func TestAppAIStructureErrMsgStopsAIRunAndSetsStatusError(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "")
+	m := NewAppModel(nil, nil, nil, "", false)
 	m.aiRunning = true
 
 	updateErr := errors.New("structure failed")
@@ -87,7 +87,7 @@ func TestAppAIStructureErrMsgStopsAIRunAndSetsStatusError(t *testing.T) {
 }
 
 func TestAppAIEmailDoneMsgSwitchesToEmailWithModel(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "")
+	m := NewAppModel(nil, nil, nil, "", false)
 	m.aiRunning = true
 
 	updated, _ := appUpdate(t, m, AIEmailDoneMsg{Subject: "Summary", Body: "Body text"})
@@ -104,7 +104,7 @@ func TestAppAIEmailDoneMsgSwitchesToEmailWithModel(t *testing.T) {
 }
 
 func TestAppAIEmailErrMsgStopsAIRunAndSetsStatusError(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "")
+	m := NewAppModel(nil, nil, nil, "", false)
 	m.aiRunning = true
 
 	updateErr := errors.New("email generation failed")
@@ -127,7 +127,7 @@ func TestAppAIEmailErrMsgStopsAIRunAndSetsStatusError(t *testing.T) {
 func TestAppSaveDoneMsgClearsEditorErrorState(t *testing.T) {
 	store := newTestStore(t)
 	meeting := createProjectAndMeeting(t, store)
-	m := NewAppModel(nil, store, nil, "")
+	m := NewAppModel(nil, store, nil, "", false)
 	m.editorModel = NewEditorModel(meeting, store, 80, 24, "", "")
 	m.hasEditorModel = true
 
@@ -149,7 +149,7 @@ func TestAppSaveDoneMsgClearsEditorErrorState(t *testing.T) {
 func TestAppSaveErrMsgSetsEditorErrorStatus(t *testing.T) {
 	store := newTestStore(t)
 	meeting := createProjectAndMeeting(t, store)
-	m := NewAppModel(nil, store, nil, "")
+	m := NewAppModel(nil, store, nil, "", false)
 	m.editorModel = NewEditorModel(meeting, store, 80, 24, "", "")
 	m.hasEditorModel = true
 
@@ -172,7 +172,7 @@ func TestAppRegenerateEmailMsgStartsAIWhenConfigured(t *testing.T) {
 	meeting := createProjectAndMeeting(t, store)
 	provider := appTestProvider{emailResponse: "Subject: Follow-up\n\nThanks"}
 
-	m := NewAppModel(nil, store, provider, "")
+	m := NewAppModel(nil, store, provider, "", false)
 	m.screen = ScreenEmail
 	m.currentMeeting = meeting
 	m.structuredMD = "# Structured"
@@ -194,7 +194,7 @@ func TestAppRegenerateEmailMsgStartsAIWhenConfigured(t *testing.T) {
 
 func TestAppEscFromNewMeetingReturnsToMeetingList(t *testing.T) {
 	store := newTestStore(t)
-	m := NewAppModel(nil, store, nil, "")
+	m := NewAppModel(nil, store, nil, "", false)
 	m.screen = ScreenMeetingList
 
 	// Open new-meeting as overlay
@@ -226,7 +226,7 @@ func TestAppEscFromNewMeetingReturnsToMeetingList(t *testing.T) {
 }
 
 func TestAppEscFromEmailReturnsToMeetingList(t *testing.T) {
-	m := NewAppModel(nil, nil, nil, "")
+	m := NewAppModel(nil, nil, nil, "", false)
 	m.screen = ScreenEmail
 	m.emailModel = NewEmailModel("Summary", "Body", 80, 24, "pl")
 	m.hasEmailModel = true
@@ -235,6 +235,66 @@ func TestAppEscFromEmailReturnsToMeetingList(t *testing.T) {
 
 	if updated.screen != ScreenMeetingList {
 		t.Fatalf("expected screen %v, got %v", ScreenMeetingList, updated.screen)
+	}
+}
+
+func TestAutoNewMeeting_InitEmitsNavigateMsg(t *testing.T) {
+	m := NewAppModel(nil, nil, nil, "", true)
+
+	cmd := m.Init()
+	if cmd == nil {
+		t.Fatalf("expected non-nil init command")
+	}
+
+	msg := cmd()
+	foundNavigate := false
+
+	switch typed := msg.(type) {
+	case NavigateMsg:
+		foundNavigate = typed.Screen == ScreenNewMeeting
+	case tea.BatchMsg:
+		for _, batchedCmd := range typed {
+			if batchedCmd == nil {
+				continue
+			}
+
+			emitted := batchedCmd()
+			navMsg, ok := emitted.(NavigateMsg)
+			if ok && navMsg.Screen == ScreenNewMeeting {
+				foundNavigate = true
+				break
+			}
+		}
+	}
+
+	if foundNavigate != true {
+		t.Fatalf("expected init command to emit NavigateMsg to ScreenNewMeeting, got %T", msg)
+	}
+
+	updatedModel, _ := m.Update(NavigateMsg{Screen: ScreenNewMeeting})
+	updated, ok := updatedModel.(AppModel)
+	if ok != true {
+		t.Fatalf("expected AppModel after update, got %T", updatedModel)
+	}
+	if updated.showNewMeeting != true {
+		t.Fatalf("expected showNewMeeting=true after NavigateMsg to ScreenNewMeeting, got %v", updated.showNewMeeting)
+	}
+}
+
+func TestAutoNewMeeting_FalseDoesNotTrigger(t *testing.T) {
+	m := NewAppModel(nil, nil, nil, "", false)
+
+	updatedModel, _ := m.Update(NavigateMsg{Screen: ScreenMeetingList})
+	updated, ok := updatedModel.(AppModel)
+	if ok != true {
+		t.Fatalf("expected AppModel after update, got %T", updatedModel)
+	}
+
+	if updated.showNewMeeting != false {
+		t.Fatalf("expected showNewMeeting=false for ScreenMeetingList navigate, got %v", updated.showNewMeeting)
+	}
+	if updated.screen != ScreenMeetingList {
+		t.Fatalf("expected screen=%v after navigate, got %v", ScreenMeetingList, updated.screen)
 	}
 }
 

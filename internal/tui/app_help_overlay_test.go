@@ -11,7 +11,7 @@ import (
 
 func TestHelpOverlay(t *testing.T) {
 	t.Run("app init delegates to list init", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "")
+		m := NewAppModel(&config.Config{}, nil, nil, "", false)
 
 		got := m.Init()
 		want := m.listModel.Init()
@@ -21,7 +21,7 @@ func TestHelpOverlay(t *testing.T) {
 	})
 
 	t.Run("help toggle on creates modal on meeting list", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "")
+		m := NewAppModel(&config.Config{}, nil, nil, "", false)
 		m.screen = ScreenMeetingList
 
 		updated, cmd := appUpdate(t, m, tea.KeyPressMsg{Text: "?"})
@@ -41,7 +41,7 @@ func TestHelpOverlay(t *testing.T) {
 	})
 
 	t.Run("help toggle off via question mark", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "")
+		m := NewAppModel(&config.Config{}, nil, nil, "", false)
 		opened, _ := appUpdate(t, m, tea.KeyPressMsg{Text: "?"})
 		if !opened.showHelp {
 			t.Fatalf("expected showHelp true after opening, got %v", opened.showHelp)
@@ -58,7 +58,7 @@ func TestHelpOverlay(t *testing.T) {
 	})
 
 	t.Run("help dismiss via esc emits dismiss message then closes next cycle", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "")
+		m := NewAppModel(&config.Config{}, nil, nil, "", false)
 		opened, _ := appUpdate(t, m, tea.KeyPressMsg{Text: "?"})
 
 		afterEsc, cmd := appUpdate(t, opened, tea.KeyPressMsg{Code: tea.KeyEscape})
@@ -84,7 +84,7 @@ func TestHelpOverlay(t *testing.T) {
 	})
 
 	t.Run("ctrl+c always quits even when help is open", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "")
+		m := NewAppModel(&config.Config{}, nil, nil, "", false)
 		opened, _ := appUpdate(t, m, tea.KeyPressMsg{Text: "?"})
 
 		_, cmd := appUpdate(t, opened, tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl})
@@ -99,7 +99,7 @@ func TestHelpOverlay(t *testing.T) {
 	})
 
 	t.Run("input trap blocks underlying screen shortcuts while help is open", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "")
+		m := NewAppModel(&config.Config{}, nil, nil, "", false)
 		m.screen = ScreenMeetingList
 		opened, _ := appUpdate(t, m, tea.KeyPressMsg{Text: "?"})
 
@@ -121,7 +121,7 @@ func TestHelpOverlay(t *testing.T) {
 	})
 
 	t.Run("view compositing overlays help content on top of base screen", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "")
+		m := NewAppModel(&config.Config{}, nil, nil, "", false)
 		m.screen = ScreenMeetingList
 		opened, _ := appUpdate(t, m, tea.KeyPressMsg{Text: "?"})
 
@@ -151,7 +151,7 @@ func TestHelpOverlay(t *testing.T) {
 	})
 
 	t.Run("opening and closing help preserves underlying screen", func(t *testing.T) {
-		m := NewAppModel(&config.Config{}, nil, nil, "")
+		m := NewAppModel(&config.Config{}, nil, nil, "", false)
 		m.screen = ScreenMeetingList
 
 		opened, _ := appUpdate(t, m, tea.KeyPressMsg{Text: "?"})
@@ -188,4 +188,109 @@ func TestHelpOverlay(t *testing.T) {
 			t.Fatalf("expected updated height 40, got %d", updated.height)
 		}
 	})
+}
+
+func TestHelpView_WelcomeScreen(t *testing.T) {
+	m := HelpModel{screen: ScreenWelcome}
+	view := m.View().Content
+
+	if !strings.Contains(view, "Welcome Screen") {
+		t.Fatalf("expected help view to contain %q", "Welcome Screen")
+	}
+	if !strings.Contains(view, "Global") {
+		t.Fatalf("expected help view to contain %q", "Global")
+	}
+
+	if strings.Contains(view, "Meeting List") {
+		t.Fatalf("expected help view to not contain %q", "Meeting List")
+	}
+	if strings.Contains(view, "Editor") {
+		t.Fatalf("expected help view to not contain %q", "Editor")
+	}
+	if strings.Contains(view, "Email") {
+		t.Fatalf("expected help view to not contain %q", "Email")
+	}
+}
+
+func TestHelpView_MeetingListScreen(t *testing.T) {
+	m := HelpModel{screen: ScreenMeetingList}
+	view := m.View().Content
+
+	if !strings.Contains(view, "Meeting List") {
+		t.Fatalf("expected help view to contain %q", "Meeting List")
+	}
+	if !strings.Contains(view, "Global") {
+		t.Fatalf("expected help view to contain %q", "Global")
+	}
+	if !strings.Contains(view, "Confirmation Dialogs") {
+		t.Fatalf("expected help view to contain %q", "Confirmation Dialogs")
+	}
+
+	if strings.Contains(view, "Welcome Screen") {
+		t.Fatalf("expected help view to not contain %q", "Welcome Screen")
+	}
+	if strings.Contains(view, "Editor") {
+		t.Fatalf("expected help view to not contain %q", "Editor")
+	}
+}
+
+func TestHelpView_EditorScreen(t *testing.T) {
+	m := HelpModel{screen: ScreenEditor}
+	view := m.View().Content
+
+	if !strings.Contains(view, "Editor") {
+		t.Fatalf("expected help view to contain %q", "Editor")
+	}
+	if !strings.Contains(view, "Split Pane") {
+		t.Fatalf("expected help view to contain %q", "Split Pane")
+	}
+	if !strings.Contains(view, "Global") {
+		t.Fatalf("expected help view to contain %q", "Global")
+	}
+	if !strings.Contains(view, "Confirmation Dialogs") {
+		t.Fatalf("expected help view to contain %q", "Confirmation Dialogs")
+	}
+
+	if strings.Contains(view, "Welcome Screen") {
+		t.Fatalf("expected help view to not contain %q", "Welcome Screen")
+	}
+	if strings.Contains(view, "Meeting List") {
+		t.Fatalf("expected help view to not contain %q", "Meeting List")
+	}
+	if strings.Contains(view, "Email") {
+		t.Fatalf("expected help view to not contain %q", "Email")
+	}
+}
+
+func TestHelpView_EmailScreen(t *testing.T) {
+	m := HelpModel{screen: ScreenEmail}
+	view := m.View().Content
+
+	if !strings.Contains(view, "Email") {
+		t.Fatalf("expected help view to contain %q", "Email")
+	}
+	if !strings.Contains(view, "Global") {
+		t.Fatalf("expected help view to contain %q", "Global")
+	}
+
+	if strings.Contains(view, "Editor") {
+		t.Fatalf("expected help view to not contain %q", "Editor")
+	}
+	if strings.Contains(view, "Meeting List") {
+		t.Fatalf("expected help view to not contain %q", "Meeting List")
+	}
+}
+
+func TestAppModel_HelpOpensWithCorrectScreen(t *testing.T) {
+	m := NewAppModel(nil, nil, nil, "", false)
+	m.screen = ScreenMeetingList
+
+	updated, _ := appUpdate(t, m, tea.KeyPressMsg{Code: '/', Mod: tea.ModCtrl})
+
+	if updated.showHelp != true {
+		t.Fatalf("expected showHelp true, got %v", updated.showHelp)
+	}
+	if updated.helpModel.screen != ScreenMeetingList {
+		t.Fatalf("expected helpModel.screen %v, got %v", ScreenMeetingList, updated.helpModel.screen)
+	}
 }

@@ -9,7 +9,7 @@ import (
 
 func newProviderOverlayAdversarialApp() AppModel {
 	cfg := &config.Config{AIProvider: "github_models", GitHubModel: "gpt-4o"}
-	m := NewAppModel(cfg, nil, appTestProvider{}, "")
+	m := NewAppModel(cfg, nil, appTestProvider{}, "", false)
 	m.screen = ScreenEditor
 	m.editorModel = NewEditorModel(nil, nil, 80, 24, "", "")
 	m.hasEditorModel = true
@@ -44,7 +44,7 @@ func TestProviderOverlayAdversarial(t *testing.T) {
 	})
 
 	t.Run("dismiss modal closes help when provider is not showing", func(t *testing.T) {
-		m := NewAppModel(&config.Config{AIProvider: "github_models", GitHubModel: "gpt-4o"}, nil, appTestProvider{}, "")
+		m := NewAppModel(&config.Config{AIProvider: "github_models", GitHubModel: "gpt-4o"}, nil, appTestProvider{}, "", false)
 		m.screen = ScreenMeetingList
 		m.showHelp = true
 		m.showProvider = false
@@ -86,7 +86,7 @@ func TestProviderOverlayAdversarial(t *testing.T) {
 	})
 
 	t.Run("ctrl+o from non-editor screen opens provider overlay", func(t *testing.T) {
-		m := NewAppModel(&config.Config{AIProvider: "github_models", GitHubModel: "gpt-4o"}, nil, appTestProvider{}, "")
+		m := NewAppModel(&config.Config{AIProvider: "github_models", GitHubModel: "gpt-4o"}, nil, appTestProvider{}, "", false)
 		m.screen = ScreenMeetingList
 
 		updated, _ := appUpdate(t, m, tea.KeyPressMsg{Code: 'o', Mod: tea.ModCtrl})

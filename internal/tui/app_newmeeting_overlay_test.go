@@ -12,7 +12,7 @@ import (
 )
 
 func TestNewMeetingOverlayModalOpensFromNavigateWithoutScreenSwitch(t *testing.T) {
-	m := NewAppModel(&config.Config{}, nil, nil, "")
+	m := NewAppModel(&config.Config{}, nil, nil, "", false)
 	m.screen = ScreenMeetingList
 
 	updated, cmd := appUpdate(t, m, NavigateMsg{Screen: ScreenNewMeeting})
@@ -35,7 +35,7 @@ func TestNewMeetingOverlayModalOpensFromNavigateWithoutScreenSwitch(t *testing.T
 }
 
 func TestNewMeetingOverlayEscapeEmitsDismissThenClosesModal(t *testing.T) {
-	m := NewAppModel(&config.Config{}, nil, nil, "")
+	m := NewAppModel(&config.Config{}, nil, nil, "", false)
 	opened, _ := appUpdate(t, m, NavigateMsg{Screen: ScreenNewMeeting})
 
 	afterEsc, cmd := appUpdate(t, opened, tea.KeyPressMsg{Code: tea.KeyEscape})
@@ -61,7 +61,7 @@ func TestNewMeetingOverlayEscapeEmitsDismissThenClosesModal(t *testing.T) {
 }
 
 func TestNewMeetingOverlayMeetingCreatedClosesModal(t *testing.T) {
-	m := NewAppModel(&config.Config{}, nil, nil, "")
+	m := NewAppModel(&config.Config{}, nil, nil, "", false)
 	opened, _ := appUpdate(t, m, NavigateMsg{Screen: ScreenNewMeeting})
 
 	meeting := &storage.Meeting{
@@ -82,7 +82,7 @@ func TestNewMeetingOverlayMeetingCreatedClosesModal(t *testing.T) {
 }
 
 func TestNewMeetingOverlayZOrderPrefersNewMeetingOverHelp(t *testing.T) {
-	m := NewAppModel(&config.Config{}, nil, nil, "")
+	m := NewAppModel(&config.Config{}, nil, nil, "", false)
 	opened, _ := appUpdate(t, m, NavigateMsg{Screen: ScreenNewMeeting})
 	opened.showHelp = true
 	opened.helpModal = NewModalModel("Help", opened.helpModel, opened.width, opened.height)
@@ -107,7 +107,7 @@ func TestNewMeetingOverlayZOrderPrefersNewMeetingOverHelp(t *testing.T) {
 }
 
 func TestNewMeetingOverlayViewRendersModalOnTopOfMeetingList(t *testing.T) {
-	m := NewAppModel(&config.Config{}, nil, nil, "")
+	m := NewAppModel(&config.Config{}, nil, nil, "", false)
 	m.screen = ScreenMeetingList
 	opened, _ := appUpdate(t, m, NavigateMsg{Screen: ScreenNewMeeting})
 
@@ -124,7 +124,7 @@ func TestNewMeetingOverlayViewRendersModalOnTopOfMeetingList(t *testing.T) {
 }
 
 func TestNewMeetingOverlayCtrlCQuitsWhenModalIsShowing(t *testing.T) {
-	m := NewAppModel(&config.Config{}, nil, nil, "")
+	m := NewAppModel(&config.Config{}, nil, nil, "", false)
 	opened, _ := appUpdate(t, m, NavigateMsg{Screen: ScreenNewMeeting})
 
 	_, cmd := appUpdate(t, opened, tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl})
